@@ -14,7 +14,7 @@ def teardown(logger):
 
 class TestClassB:
     @pytest.mark.parametrize('x', [True, False])
-    def test_a(self, logger, x):
+    def test_a(self, logger, session_fixture, module_fixture, setup, teardown, x):
         logger.debug("Starting test_module_b.TestClassB.test_a")
         assert x, f'Expecting x to be True, Actual: {x=}'
 
