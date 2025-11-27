@@ -12,6 +12,7 @@ A pytest plugin that captures log output during test execution and embeds it int
 - 📋 **Log Integration**: Automatically captures all log output during test execution and embeds it into JUnit XML reports
 - 🎯 **Smart Scope Distribution**: Session-scoped logs appear in all tests, module-scoped logs appear in module tests, function-scoped logs appear only in specific tests
 - ⚡ **Execution Phase Tags**: Each log entry includes a `step` attribute indicating whether it occurred during setup or test execution
+- 🏷️ **Logger Name Tracking**: Captures the name of the logger that generated each message for better debugging context
 - 🔧 **Configurable Log Levels**: Control verbosity with `--junit-log-level` option
 - 🚨 **Assertion Capture**: Automatically captures assertion failure messages as ASSERT-level logs
 - 📁 **Relative Paths**: File paths in logs are relative to project root for portability
@@ -93,16 +94,16 @@ The resulting `results.xml` will include embedded logs:
     <testsuite name="pytest" errors="0" failures="0" skipped="0" tests="2" time="0.01">
         <testcase classname="test_example" name="test_user_creation" time="0.001">
             <logs>
-                <log step="setup" ts="2025-11-27T10:00:00.000000+00:00" level="INFO" src="test_example.py:8">Setting up database connection</log>
-                <log step="test" ts="2025-11-27T10:00:00.100000+00:00" level="INFO" src="test_example.py:15">Starting user creation test</log>
-                <log step="test" ts="2025-11-27T10:00:00.200000+00:00" level="INFO" src="test_example.py:22">User creation test completed successfully</log>
+                <log step="setup" ts="2025-11-27T10:00:00.000000+00:00" level="INFO" logger="root" src="test_example.py:8">Setting up database connection</log>
+                <log step="test" ts="2025-11-27T10:00:00.100000+00:00" level="INFO" logger="root" src="test_example.py:15">Starting user creation test</log>
+                <log step="test" ts="2025-11-27T10:00:00.200000+00:00" level="INFO" logger="root" src="test_example.py:22">User creation test completed successfully</log>
             </logs>
         </testcase>
         <testcase classname="test_example" name="test_user_validation" time="0.001">
             <logs>
-                <log step="setup" ts="2025-11-27T10:00:01.000000+00:00" level="INFO" src="test_example.py:8">Setting up database connection</log>
-                <log step="test" ts="2025-11-27T10:00:01.100000+00:00" level="WARNING" src="test_example.py:25">This is a validation test</log>
-                <log step="test" ts="2025-11-27T10:00:01.200000+00:00" level="INFO" src="test_example.py:10">Closing database connection</log>
+                <log step="setup" ts="2025-11-27T10:00:01.000000+00:00" level="INFO" logger="root" src="test_example.py:8">Setting up database connection</log>
+                <log step="test" ts="2025-11-27T10:00:01.100000+00:00" level="WARNING" logger="root" src="test_example.py:25">This is a validation test</log>
+                <log step="test" ts="2025-11-27T10:00:01.200000+00:00" level="INFO" logger="root" src="test_example.py:10">Closing database connection</log>
             </logs>
         </testcase>
     </testsuite>
@@ -129,15 +130,60 @@ This makes it easy to distinguish between infrastructure logs (fixture setup) an
 
 ```xml
 <logs>
-    <log step="setup" ts="..." level="INFO" src="conftest.py:10">Database connection established</log>
-    <log step="setup" ts="..." level="INFO" src="conftest.py:25">User fixtures initialized</log>
-    <log step="test" ts="..." level="DEBUG" src="test_user.py:15">Starting user validation test</log>
-    <log step="test" ts="..." level="INFO" src="test_user.py:20">User validation completed</log>
-    <log step="test" ts="..." level="INFO" src="conftest.py:30">Cleaning up user fixtures</log>
+    <log step="setup" ts="..." level="INFO" logger="database.connection" src="conftest.py:10">Database connection established</log>
+    <log step="setup" ts="..." level="INFO" logger="fixtures.user" src="conftest.py:25">User fixtures initialized</log>
+    <log step="test" ts="..." level="DEBUG" logger="test.validation" src="test_user.py:15">Starting user validation test</log>
+    <log step="test" ts="..." level="INFO" logger="test.validation" src="test_user.py:20">User validation completed</log>
+    <log step="test" ts="..." level="INFO" logger="fixtures.user" src="conftest.py:30">Cleaning up user fixtures</log>
 </logs>
 ```
 
 **Post-processing**: To flatten the structure and remove step attributes for legacy compatibility, simply strip the `step="..."` attributes from log elements.
+
+## Logger Name Tracking
+
+Each log entry includes a `logger` attribute that shows which logger generated the message, providing valuable debugging context:
+
+```python
+# Example test with multiple loggers
+import logging
+
+# Different loggers for different components
+db_logger = logging.getLogger('myapp.database')
+auth_logger = logging.getLogger('myapp.auth')
+api_logger = logging.getLogger('requests.packages.urllib3')
+
+def test_user_workflow():
+    db_logger.info("Connecting to user database")
+    auth_logger.warning("Invalid login attempt detected")
+    api_logger.debug("HTTP request to /api/users")
+    logging.error("Test assertion failed")  # Uses root logger
+```
+
+The resulting XML will clearly identify the source of each log message:
+
+```xml
+<logs>
+    <log step="test" ts="..." level="INFO" logger="myapp.database" src="test_user.py:8">Connecting to user database</log>
+    <log step="test" ts="..." level="WARNING" logger="myapp.auth" src="test_user.py:9">Invalid login attempt detected</log>
+    <log step="test" ts="..." level="DEBUG" logger="requests.packages.urllib3" src="test_user.py:10">HTTP request to /api/users</log>
+    <log step="test" ts="..." level="ERROR" logger="root" src="test_user.py:11">Test assertion failed</log>
+</logs>
+```
+
+### Common Logger Names
+
+- **`root`**: Default Python logger (`logging.info()`, `logging.error()`, etc.)
+- **`myapp.module`**: Application-specific loggers (`logging.getLogger('myapp.module')`)
+- **`requests.packages.urllib3`**: Third-party library loggers (HTTP requests)
+- **`sqlalchemy.engine`**: Database ORM loggers
+- **`pytest.assert`**: Assertion failure messages captured by the plugin
+
+This makes it easy to:
+- **Debug third-party library issues** by filtering logs from specific libraries
+- **Trace application flow** through different components
+- **Separate concerns** between application logic and infrastructure
+- **Identify log sources** in complex applications with multiple modules
 
 ## Log Level Filtering
 

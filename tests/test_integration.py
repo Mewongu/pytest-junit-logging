@@ -394,6 +394,7 @@ class TestRealWorldScenarios:
                 import logging
                 import time
 
+                logger = logging.getLogger('derp')
                 def test_concurrent_{i}():
                     logging.info("Test {i} starting")
                     time.sleep(0.1)  # Simulate some work

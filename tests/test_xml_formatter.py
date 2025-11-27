@@ -28,6 +28,7 @@ class TestLogEntryXMLFormatting:
             assert xml_element.get("step") == "test"
             assert xml_element.get("ts") == "2025-11-27T10:00:00.000000+00:00"
             assert xml_element.get("level") == "INFO"
+            assert xml_element.get("logger") == "test.module.logger"
             assert xml_element.get("src") == "tests/test_example.py:42"
             assert xml_element.text == "Test log message"
 
@@ -37,6 +38,7 @@ class TestLogEntryXMLFormatting:
             timestamp="2025-11-27T10:00:00.000000+00:00",
             level="ERROR",
             message="Error: <value> should be > 5 & < 10",
+            logger_name="test.validator",
             filename="/workspace/test.py",
             lineno=25,
             test_item_id="test.example.test_method",
@@ -56,6 +58,7 @@ class TestLogEntryXMLFormatting:
             timestamp="2025-11-27T10:00:00.000000+00:00",
             level="DEBUG",
             message="Debug message",
+            logger_name="test.debug",
             filename="/workspace/tests with spaces/test-file.py",
             lineno=10,
             test_item_id="test.example.test_method",
@@ -75,6 +78,7 @@ class TestLogEntryXMLFormatting:
             timestamp="2025-11-27T10:00:00.000000+00:00",
             level="INFO",
             message="Setup message",
+            logger_name="conftest.setup",
             filename="/workspace/test.py",
             lineno=10,
             test_item_id="test.example.test_method",
@@ -86,6 +90,7 @@ class TestLogEntryXMLFormatting:
             timestamp="2025-11-27T10:00:01.000000+00:00",
             level="INFO",
             message="Teardown message",
+            logger_name="conftest.teardown",
             filename="/workspace/test.py",
             lineno=20,
             test_item_id="test.example.test_method",
@@ -97,6 +102,7 @@ class TestLogEntryXMLFormatting:
             timestamp="2025-11-27T10:00:00.500000+00:00",
             level="DEBUG",
             message="Test execution message",
+            logger_name="test.execution",
             filename="/workspace/test.py",
             lineno=15,
             test_item_id="test.example.test_method",
@@ -112,6 +118,35 @@ class TestLogEntryXMLFormatting:
             assert setup_xml.get("step") == "setup"
             assert teardown_xml.get("step") == "teardown"
             assert test_xml.get("step") == "test"
+
+    def test_logger_name_attribute(self):
+        """Test that logger name is included as an attribute in XML output."""
+        # Test with different logger names
+        test_cases = [
+            ("root", "Root logger test"),
+            ("myapp.database", "Database logger test"),
+            ("requests.packages.urllib3", "HTTP library test"),
+            ("sqlalchemy.engine.Engine", "SQLAlchemy engine test"),
+        ]
+
+        for logger_name, message in test_cases:
+            log_entry = LogEntry(
+                timestamp="2025-11-27T10:00:00.000000+00:00",
+                level="INFO",
+                message=message,
+                logger_name=logger_name,
+                filename="/workspace/test.py",
+                lineno=10,
+                test_item_id="test.example.test_method",
+            )
+
+            with patch("pytest_junit_logging.xml_formatter._get_relative_path") as mock_rel_path:
+                mock_rel_path.return_value = "test.py"
+
+                xml_element = format_log_entry_for_xml(log_entry)
+
+                assert xml_element.get("logger") == logger_name
+                assert xml_element.text == message
 
 
 class TestRelativePathGeneration:
@@ -172,6 +207,7 @@ class TestTestcaseXMLModification:
                 timestamp="2025-11-27T10:00:00.000000+00:00",
                 level="INFO",
                 message="Test log 1",
+                logger_name="test.logger1",
                 filename="/workspace/test.py",
                 lineno=10,
                 test_item_id="tests.test_example.TestClass.test_method",
@@ -180,6 +216,7 @@ class TestTestcaseXMLModification:
                 timestamp="2025-11-27T10:00:01.000000+00:00",
                 level="DEBUG",
                 message="Test log 2",
+                logger_name="test.logger2",
                 filename="/workspace/test.py",
                 lineno=15,
                 test_item_id="tests.test_example.TestClass.test_method",
@@ -301,6 +338,7 @@ class TestXMLTreeManipulation:
                 timestamp="2025-11-27T10:00:00.000000+00:00",
                 level="INFO",
                 message="Test execution started",
+                logger_name="test.execution",
                 filename="/workspace/test_example.py",
                 lineno=5,
                 test_item_id="tests.test_example.TestClass.test_method",

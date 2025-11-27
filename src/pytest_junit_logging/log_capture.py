@@ -16,6 +16,7 @@ class LogEntry:
     timestamp: str
     level: str
     message: str
+    logger_name: str
     filename: str
     lineno: int
     test_item_id: str | None = None
@@ -68,6 +69,7 @@ class TestLogCapture(logging.Handler):
                 timestamp=timestamp,
                 level=record.levelname,
                 message=message,
+                logger_name=record.name,
                 filename=filename,
                 lineno=lineno,
                 test_item_id=test_item_id,
