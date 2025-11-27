@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=61", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pytest-junit-logging"
+dynamic = ["version"]
+description = "A pytest plugin for embedding log output into JUnit XML reports"
+readme = "README.md"
+authors = [{name = "Andreas Stenberg"}]
+license = {text = "MIT"}
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Framework :: Pytest",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Testing",
+]
+requires-python = ">=3.8"
+dependencies = [
+    "pytest>=6.0",
+]
+
+[project.entry-points.pytest11]
+pytest_junit_logging = "pytest_junit_logging.plugin"
+
+[tool.setuptools-scm]
+write_to = "src/pytest_junit_logging/_version.py"
+
+[tool.setuptools.packages.find]
+where = ["src"]
