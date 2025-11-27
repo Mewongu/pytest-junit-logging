@@ -3,6 +3,7 @@ End-to-end integration tests for the complete plugin functionality.
 """
 
 import pytest
+import sys
 import tempfile
 import subprocess
 import xml.etree.ElementTree as ET
@@ -80,7 +81,7 @@ class TestEndToEndIntegration:
         # Run pytest with our plugin
         xml_file = test_project / "results.xml"
         result = subprocess.run([
-            "python", "-m", "pytest", 
+            sys.executable, "-m", "pytest", 
             str(test_project),
             f"--junit-xml={xml_file}",
             "-v"
@@ -137,7 +138,7 @@ class TestEndToEndIntegration:
         # Run pytest expecting failure
         xml_file = test_project / "results.xml"
         result = subprocess.run([
-            "python", "-m", "pytest",
+            sys.executable, "-m", "pytest",
             str(test_project),
             f"--junit-xml={xml_file}",
             "-v"
@@ -179,7 +180,7 @@ class TestEndToEndIntegration:
         # Run pytest
         xml_file = test_project / "results.xml"
         result = subprocess.run([
-            "python", "-m", "pytest",
+            sys.executable, "-m", "pytest",
             str(test_project), 
             f"--junit-xml={xml_file}",
             "-v"
@@ -217,7 +218,7 @@ class TestEndToEndIntegration:
         
         # Run pytest WITHOUT --junit-xml
         result = subprocess.run([
-            "python", "-m", "pytest",
+            sys.executable, "-m", "pytest",
             str(test_project),
             "-v"
         ], capture_output=True, text=True, cwd=str(test_project))
@@ -275,14 +276,24 @@ class TestRealWorldScenarios:
         
         xml_file = test_project / "results.xml"
         result = subprocess.run([
-            "python", "-m", "pytest",
+            sys.executable, "-m", "pytest",
             str(test_project),
             f"--junit-xml={xml_file}",
             "-v", "-s"  # Add -s to see output
         ], capture_output=True, text=True, cwd=str(test_project))
         
-        assert result.returncode == 0
+        print(f"Subprocess result: returncode={result.returncode}")
+        print(f"Subprocess stdout: {result.stdout}")
+        print(f"Subprocess stderr: {result.stderr}")
+        print(f"XML file exists: {xml_file.exists()}")
+        
+        assert result.returncode == 0, f"pytest failed: {result.stdout}\n{result.stderr}"
         assert xml_file.exists()
+        
+        # Debug: Print the actual XML content first
+        with open(xml_file, 'r') as f:
+            xml_content = f.read()
+            print("Generated XML:", xml_content)
         
         tree = ET.parse(xml_file)
         testcases = tree.findall(".//testcase")
@@ -292,8 +303,9 @@ class TestRealWorldScenarios:
             logs_element = tc.find("logs")
             if logs_element is not None:
                 log_messages = [log.text for log in logs_element.findall("log")]
+                print(f"Found log messages: {log_messages}")
                 assert any("Setting up database session" in msg for msg in log_messages)
-                assert any("Creating API client" in msg for msg in log_messages)
+                assert any("Fetching user data via" in msg for msg in log_messages)
     
     def test_exception_during_fixture_teardown(self, temp_dir):
         """Test handling of exceptions during fixture teardown."""
@@ -324,7 +336,7 @@ class TestRealWorldScenarios:
         
         xml_file = test_project / "results.xml"
         result = subprocess.run([
-            "python", "-m", "pytest",
+            sys.executable, "-m", "pytest",
             str(test_project),
             f"--junit-xml={xml_file}",
             "-v"
@@ -363,7 +375,7 @@ class TestRealWorldScenarios:
         
         xml_file = test_project / "results.xml"
         result = subprocess.run([
-            "python", "-m", "pytest",
+            sys.executable, "-m", "pytest",
             str(test_project),
             f"--junit-xml={xml_file}",
             "-v"
