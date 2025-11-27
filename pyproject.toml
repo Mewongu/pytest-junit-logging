@@ -84,6 +84,7 @@ select = [
 ignore = [
     "E501",  # line too long (handled by black)
     "UP007", # Optional[X] is ok
+    "UP045", # Optional[X] is ok
 ]
 
 [tool.ruff.lint.per-file-ignores]
