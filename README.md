@@ -140,8 +140,73 @@ The plugin works seamlessly with CI/CD systems that consume JUnit XML reports:
 
 ## Requirements
 
-- Python 3.8+
+- Python 3.10+
 - pytest 6.0+
+
+## Development
+
+### Setup Development Environment
+
+```bash
+# Clone the repository
+git clone <repository-url>
+cd pytest-junit-logging
+
+# Install in development mode with dev dependencies
+pip install -e ".[dev]"
+```
+
+### Running Tests
+
+#### Local Testing
+```bash
+# Run tests for current Python version
+pytest
+
+# Run tests across all supported Python/pytest combinations (requires all Python versions)
+tox
+
+# Run specific tox environment
+tox -e py312-pytest8
+```
+
+#### Docker-based Testing (Recommended)
+```bash
+# Run all tests across all Python versions in Docker
+./scripts/test-all.sh
+
+# Test specific Python version
+./scripts/test-single.sh 3.11 8    # Python 3.11 with pytest 8.x
+
+# Test individual components with docker-compose
+docker-compose -f docker-compose.test.yml run --rm test-py310    # Python 3.10 tests
+docker-compose -f docker-compose.test.yml run --rm test-quality  # Linting & coverage
+docker-compose -f docker-compose.test.yml run --rm test-mindeps  # Minimum dependencies
+```
+
+### Tox Test Matrix
+
+The project tests against these combinations:
+
+| Python | pytest 6.x | pytest 7.x | pytest 8.x |
+|--------|-------------|-------------|-------------|
+| 3.10   | ✅          | ✅          | ✅          |
+| 3.11   | -           | ✅          | ✅          |
+| 3.12   | -           | -           | ✅          |
+| 3.13   | -           | -           | ✅          |
+
+### Code Quality
+
+```bash
+# Format code
+black src/ tests/
+
+# Lint code
+ruff check src/ tests/
+
+# Type checking
+mypy src/
+```
 
 ## License
 

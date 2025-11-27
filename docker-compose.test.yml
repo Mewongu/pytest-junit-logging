@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  # Test with Python 3.10
+  test-py310:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+      args:
+        PYTHON_VERSION: "3.10"
+    volumes:
+      - ./reports:/app/reports
+    environment:
+      - TOX_TESTENV_PASSENV=CI
+    command: tox -e py310-pytest6,py310-pytest7,py310-pytest8
+
+  # Test with Python 3.11  
+  test-py311:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+      args:
+        PYTHON_VERSION: "3.11"
+    volumes:
+      - ./reports:/app/reports
+    environment:
+      - TOX_TESTENV_PASSENV=CI
+    command: tox -e py311-pytest7,py311-pytest8
+
+  # Test with Python 3.12
+  test-py312:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+      args:
+        PYTHON_VERSION: "3.12"
+    volumes:
+      - ./reports:/app/reports
+    environment:
+      - TOX_TESTENV_PASSENV=CI
+    command: tox -e py312-pytest8
+
+  # Test with Python 3.13
+  test-py313:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+      args:
+        PYTHON_VERSION: "3.13"
+    volumes:
+      - ./reports:/app/reports
+    environment:
+      - TOX_TESTENV_PASSENV=CI
+    command: tox -e py313-pytest8
+
+  # Run all linting and coverage tests
+  test-quality:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+      args:
+        PYTHON_VERSION: "3.10"
+    volumes:
+      - ./reports:/app/reports
+    command: tox -e lint,coverage,integration
+
+  # Run minimum dependencies test
+  test-mindeps:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+      args:
+        PYTHON_VERSION: "3.10"
+    volumes:
+      - ./reports:/app/reports
+    command: tox -e mindeps

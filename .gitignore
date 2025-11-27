@@ -161,6 +161,7 @@ out/
 # Temp test files
 *.xml
 temp_test/
+reports/
 
 # Virtual environments
 .venv/
