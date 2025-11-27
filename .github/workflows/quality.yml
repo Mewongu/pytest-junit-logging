@@ -16,7 +16,7 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Set up Python 3.10
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: "3.10"
 
@@ -46,7 +46,7 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Set up Python 3.10
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: "3.10"
 
@@ -61,7 +61,7 @@ jobs:
         bandit -r src/ -f txt
 
     - name: Upload bandit report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: bandit-security-report
@@ -75,7 +75,7 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Set up Python 3.10
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: "3.10"
 
@@ -118,12 +118,15 @@ jobs:
     - name: Check that entry point is valid
       run: |
         python -c "
-        import pkg_resources
-        eps = list(pkg_resources.iter_entry_points('pytest11'))
-        plugin_eps = [ep for ep in eps if ep.name == 'pytest_junit_logging']
-        if not plugin_eps:
+        try:
+            from importlib.metadata import entry_points
+        except ImportError:
+            from importlib_metadata import entry_points
+        
+        eps = [ep for ep in entry_points().get('pytest11', []) if ep.name == 'pytest_junit_logging']
+        if not eps:
             raise RuntimeError('Entry point not found')
-        plugin_ep = plugin_eps[0]
+        plugin_ep = eps[0]
         plugin = plugin_ep.load()
         print(f'✓ Entry point {plugin_ep.name} loads successfully: {plugin}')
         "

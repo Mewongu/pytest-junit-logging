@@ -18,7 +18,7 @@ jobs:
         fetch-depth: 0
 
     - name: Set up Python 3.10
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: "3.10"
 
@@ -119,7 +119,7 @@ jobs:
         "
 
     - name: Upload integration test XML files
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: integration-xml-reports
@@ -161,7 +161,7 @@ jobs:
         fetch-depth: 0
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
 
@@ -173,8 +173,12 @@ jobs:
         
         # Test that plugin registers correctly
         python -c "
-        import pkg_resources
-        eps = list(pkg_resources.iter_entry_points('pytest11', 'pytest_junit_logging'))
+        try:
+            from importlib.metadata import entry_points
+        except ImportError:
+            from importlib_metadata import entry_points
+        
+        eps = [ep for ep in entry_points().get('pytest11', []) if ep.name == 'pytest_junit_logging']
         if not eps:
             raise RuntimeError('Plugin entry point not found')
         print(f'✓ Plugin entry point found: {eps[0]}')
