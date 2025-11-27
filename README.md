@@ -1,11 +1,11 @@
 # pytest-junit-logging
 
-[![Test](https://github.com/USERNAME/pytest-junit-logging/workflows/Test/badge.svg)](https://github.com/USERNAME/pytest-junit-logging/actions/workflows/test.yml)
-[![Code Quality](https://github.com/USERNAME/pytest-junit-logging/workflows/Code%20Quality/badge.svg)](https://github.com/USERNAME/pytest-junit-logging/actions/workflows/quality.yml)
-[![Integration Tests](https://github.com/USERNAME/pytest-junit-logging/workflows/Integration%20Tests/badge.svg)](https://github.com/USERNAME/pytest-junit-logging/actions/workflows/integration.yml)
+[![Test](https://github.com/Mewongu/pytest-junit-logging/workflows/Test/badge.svg)](https://github.com/Mewongu/pytest-junit-logging/actions/workflows/test.yml)
+[![Code Quality](https://github.com/Mewongu/pytest-junit-logging/workflows/Code%20Quality/badge.svg)](https://github.com/Mewongu/pytest-junit-logging/actions/workflows/quality.yml)
+[![Integration Tests](https://github.com/Mewongu/pytest-junit-logging/workflows/Integration%20Tests/badge.svg)](https://github.com/Mewongu/pytest-junit-logging/actions/workflows/integration.yml)
 [![PyPI version](https://badge.fury.io/py/pytest-junit-logging.svg)](https://badge.fury.io/py/pytest-junit-logging)
 [![Python versions](https://img.shields.io/pypi/pyversions/pytest-junit-logging.svg)](https://pypi.org/project/pytest-junit-logging/)
-[![codecov](https://codecov.io/gh/USERNAME/pytest-junit-logging/branch/main/graph/badge.svg)](https://codecov.io/gh/USERNAME/pytest-junit-logging)
+[![codecov](https://codecov.io/gh/Mewongu/pytest-junit-logging/branch/main/graph/badge.svg)](https://codecov.io/gh/Mewongu/pytest-junit-logging)
 
 A pytest plugin that captures log output during test execution and embeds it into JUnit XML reports.
 
