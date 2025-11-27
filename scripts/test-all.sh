@@ -22,7 +22,7 @@ run_test() {
     
     echo -e "${YELLOW}Testing: $description${NC}"
     
-    if docker-compose -f docker-compose.test.yml run --rm "$service"; then
+    if docker-compose -f docker-compose.test.yml run --build --rm "$service"; then
         echo -e "${GREEN}✅ $description - PASSED${NC}"
         return 0
     else
