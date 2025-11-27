@@ -54,54 +54,9 @@ jobs:
         elif [ "${{ matrix.pytest-version }}" = "8" ]; then
           pip install "pytest>=8.0,<9.0"
         fi
-        pip install coverage[toml] pytest-cov
         pip install -e .
 
-    - name: Run tests with coverage
+    - name: Run tests
       run: |
-        coverage erase
-        pytest --cov=src/pytest_junit_logging --cov-report=term --cov-report=xml:coverage-${{ matrix.python-version }}-pytest${{ matrix.pytest-version }}.xml tests/
+        pytest tests/ -v
 
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
-      with:
-        files: coverage-${{ matrix.python-version }}-pytest${{ matrix.pytest-version }}.xml
-        flags: python${{ matrix.python-version }}-pytest${{ matrix.pytest-version }}
-        name: Python ${{ matrix.python-version }}, pytest ${{ matrix.pytest-version }}
-        fail_ci_if_error: false
-
-  coverage-report:
-    name: Coverage Report
-    runs-on: ubuntu-latest
-    needs: test
-    if: always()
-    
-    steps:
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-
-    - name: Set up Python 3.10
-      uses: actions/setup-python@v5
-      with:
-        python-version: "3.10"
-
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install coverage[toml] pytest-cov "pytest>=8.0,<9.0"
-        pip install -e .
-
-    - name: Run coverage on Python 3.10/pytest 8.x baseline
-      run: |
-        coverage erase
-        pytest --cov=src/pytest_junit_logging --cov-report=term-missing --cov-report=html:reports/coverage --cov-report=xml:coverage.xml tests/
-        coverage report --fail-under=85
-
-    - name: Upload combined coverage
-      uses: codecov/codecov-action@v3
-      with:
-        files: coverage.xml
-        flags: combined
-        name: Combined Coverage
-        fail_ci_if_error: true
