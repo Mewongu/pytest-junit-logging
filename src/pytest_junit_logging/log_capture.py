@@ -120,18 +120,22 @@ def get_log_capture() -> TestLogCapture:
     return _log_capture
 
 
-def install_log_capture() -> None:
-    """Install the log capture handler to the root logger."""
+def install_log_capture(min_level: int = logging.DEBUG) -> None:
+    """Install the log capture handler to the root logger.
+    
+    Args:
+        min_level: Minimum log level to capture (default: DEBUG)
+    """
     capture = get_log_capture()
     root_logger = logging.getLogger()
     
     # Only add if not already added
     if capture not in root_logger.handlers:
         root_logger.addHandler(capture)
-        capture.setLevel(logging.DEBUG)
+        capture.setLevel(min_level)
         # Ensure root logger level allows our logs through
-        if root_logger.level > logging.DEBUG:
-            root_logger.setLevel(logging.DEBUG)
+        if root_logger.level > min_level:
+            root_logger.setLevel(min_level)
 
 
 def uninstall_log_capture() -> None:

@@ -3,6 +3,7 @@ Core pytest-junit-logging plugin implementation.
 """
 
 import pytest
+import logging
 from .log_capture import (
     install_log_capture, 
     uninstall_log_capture, 
@@ -16,14 +17,32 @@ import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 
 
+def pytest_addoption(parser):
+    """Add plugin-specific command line options."""
+    group = parser.getgroup("junit-logging", "JUnit XML log integration")
+    group.addoption(
+        "--junit-log-level",
+        action="store",
+        default="DEBUG",
+        choices=["CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG"],
+        help="Minimum log level to include in JUnit XML (default: DEBUG)"
+    )
+
+
 def pytest_configure(config):
     """Called after command line options have been parsed."""
     # Verify plugin is loaded
     if hasattr(config, '_store'):
         config._store["pytest_junit_logging_loaded"] = True
     
-    # Install log capture handler
-    install_log_capture()
+    # Only install if junit-xml is enabled
+    if hasattr(config.option, "xmlpath") and config.option.xmlpath:
+        # Get the log level configuration
+        log_level_str = getattr(config.option, "junit_log_level", "DEBUG")
+        log_level = getattr(logging, log_level_str)
+        
+        # Install log capture handler with the specified level
+        install_log_capture(log_level)
 
 
 def pytest_sessionstart(session):
