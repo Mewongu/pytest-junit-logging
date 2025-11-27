@@ -17,9 +17,8 @@ def format_log_entry_for_xml(log_entry: LogEntry) -> ET.Element:
     log_element.set("ts", log_entry.timestamp)
     log_element.set("level", log_entry.level)
     
-    # Format source location (file:line)
-    filename = os.path.basename(log_entry.filename)
-    log_element.set("src", f"{filename}:{log_entry.lineno}")
+    # Format source location (file:line) with full path
+    log_element.set("src", f"{log_entry.filename}:{log_entry.lineno}")
     
     # Set the log message as text content (escape HTML entities)
     log_element.text = html.escape(log_entry.message)
