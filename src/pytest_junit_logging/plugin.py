@@ -102,6 +102,7 @@ def pytest_runtest_makereport(item, call):
                     timestamp=timestamp,
                     level="ASSERT",
                     message=assertion_message,
+                    logger_name="pytest.assert",
                     filename=filename,
                     lineno=lineno,
                     test_item_id=test_item_id,

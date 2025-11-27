@@ -51,6 +51,7 @@ def sample_log_entry():
         timestamp="2025-11-27T10:00:00.000000+00:00",
         level="INFO",
         message="Test log message",
+        logger_name="test.module.logger",
         filename="/workspace/tests/test_example.py",
         lineno=42,
         test_item_id="tests.test_example.TestClass.test_method",

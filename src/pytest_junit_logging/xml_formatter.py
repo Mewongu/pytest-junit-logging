@@ -25,6 +25,7 @@ def format_log_entry_for_xml(log_entry: LogEntry) -> ET.Element:
     # Set attributes
     log_element.set("ts", log_entry.timestamp)
     log_element.set("level", log_entry.level)
+    log_element.set("logger", log_entry.logger_name)
 
     # Format source location (file:line) with relative path from project root
     relative_path = _get_relative_path(log_entry.filename)

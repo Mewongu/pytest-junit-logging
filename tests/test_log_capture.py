@@ -22,6 +22,7 @@ class TestLogEntry:
         assert sample_log_entry.timestamp == "2025-11-27T10:00:00.000000+00:00"
         assert sample_log_entry.level == "INFO"
         assert sample_log_entry.message == "Test log message"
+        assert sample_log_entry.logger_name == "test.module.logger"
         assert sample_log_entry.filename == "/workspace/tests/test_example.py"
         assert sample_log_entry.lineno == 42
         assert sample_log_entry.test_item_id == "tests.test_example.TestClass.test_method"
@@ -32,6 +33,7 @@ class TestLogEntry:
             timestamp="2025-11-27T10:00:00.000000+00:00",
             level="DEBUG",
             message="Fixture setup",
+            logger_name="conftest.fixture",
             filename="/workspace/conftest.py",
             lineno=10,
             test_item_id="tests.test_example.TestClass.test_method",
@@ -94,6 +96,7 @@ class TestTestLogCapture:
         log_entry = log_capture.logs[0]
         assert log_entry.level == "INFO"
         assert log_entry.message == "Test message"
+        assert log_entry.logger_name == "test.logger"
         assert log_entry.filename == "/workspace/test_file.py"
         assert log_entry.lineno == 25
         assert log_entry.test_item_id == "test.example.test_method"
@@ -135,6 +138,38 @@ class TestTestLogCapture:
         assert log_entry.fixture_phase == "setup"
         assert log_entry.test_item_id == "test.example.test_method"
 
+    @patch("pytest_junit_logging.log_capture.datetime")
+    def test_emit_captures_logger_name(self, mock_datetime, log_capture):
+        """Test that emit correctly captures logger name from different loggers."""
+        mock_datetime.fromtimestamp.return_value.isoformat.return_value = (
+            "2025-11-27T10:00:00.000000+00:00"
+        )
+
+        log_capture.set_current_test_item("test.example.test_method")
+
+        # Test different logger names
+        logger_names = ["root", "myapp.database", "requests.packages.urllib3", "sqlalchemy.engine"]
+
+        for logger_name in logger_names:
+            record = logging.LogRecord(
+                name=logger_name,
+                level=logging.INFO,
+                pathname="/workspace/test_file.py",
+                lineno=25,
+                msg=f"Log from {logger_name}",
+                args=(),
+                exc_info=None,
+            )
+            record.created = 1234567890.123
+
+            log_capture.emit(record)
+
+        # Verify all logger names were captured correctly
+        assert len(log_capture.logs) == len(logger_names)
+        for i, expected_logger in enumerate(logger_names):
+            assert log_capture.logs[i].logger_name == expected_logger
+            assert log_capture.logs[i].message == f"Log from {expected_logger}"
+
     def test_get_logs_for_test(self, log_capture, sample_log_entry):
         """Test getting logs for specific test."""
         # Add logs for different tests
@@ -144,6 +179,7 @@ class TestTestLogCapture:
                 timestamp="2025-11-27T10:01:00.000000+00:00",
                 level="DEBUG",
                 message="Different test log",
+                logger_name="other.test.logger",
                 filename="/workspace/other_test.py",
                 lineno=10,
                 test_item_id="tests.other.test_method",
