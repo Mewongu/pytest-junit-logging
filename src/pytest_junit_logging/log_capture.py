@@ -6,7 +6,7 @@ import logging
 import threading
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Any, Optional
+from typing import Any
 
 
 @dataclass
@@ -18,9 +18,9 @@ class LogEntry:
     message: str
     filename: str
     lineno: int
-    test_item_id: Optional[str] = None
-    fixture_scope: Optional[str] = None
-    fixture_phase: Optional[str] = None
+    test_item_id: str | None = None
+    fixture_scope: str | None = None
+    fixture_phase: str | None = None
 
 
 class TestLogCapture(logging.Handler):
@@ -29,16 +29,16 @@ class TestLogCapture(logging.Handler):
     def __init__(self):
         super().__init__()
         self.logs: list[LogEntry] = []
-        self.current_test_item: Optional[str] = None
-        self.current_fixture_context: Optional[dict[str, Any]] = None
+        self.current_test_item: str | None = None
+        self.current_fixture_context: dict[str, Any] | None = None
         self._lock = threading.Lock()
 
-    def set_current_test_item(self, test_item_id: Optional[str]) -> None:
+    def set_current_test_item(self, test_item_id: str | None) -> None:
         """Set the current test item context for log association."""
         with self._lock:
             self.current_test_item = test_item_id
 
-    def set_fixture_context(self, fixture_context: Optional[dict[str, Any]]) -> None:
+    def set_fixture_context(self, fixture_context: dict[str, Any] | None) -> None:
         """Set the current fixture context for log association."""
         with self._lock:
             self.current_fixture_context = fixture_context
@@ -84,7 +84,7 @@ class TestLogCapture(logging.Handler):
             # Don't let logging errors break the test
             pass
 
-    def _determine_test_context(self) -> Optional[str]:
+    def _determine_test_context(self) -> str | None:
         """Determine the appropriate test context for a log entry."""
         if self.current_fixture_context and "test_item_id" in self.current_fixture_context:
             # During fixture execution, use the test item from fixture context
@@ -113,7 +113,7 @@ class TestLogCapture(logging.Handler):
 
 
 # Global log capture instance
-_log_capture: Optional[TestLogCapture] = None
+_log_capture: TestLogCapture | None = None
 
 
 def get_log_capture() -> TestLogCapture:
@@ -155,8 +155,8 @@ class TestItemTracker:
     """Tracks test item context and manages log association."""
 
     def __init__(self):
-        self.current_test_item: Optional[str] = None
-        self.current_fixture_context: Optional[dict[str, Any]] = None
+        self.current_test_item: str | None = None
+        self.current_fixture_context: dict[str, Any] | None = None
         self.session_logs: list[LogEntry] = []
         self.module_logs: dict[str, list[LogEntry]] = {}
         self.test_logs: dict[str, list[LogEntry]] = {}
@@ -280,7 +280,7 @@ class TestItemTracker:
 
 
 # Global test item tracker
-_test_tracker: Optional[TestItemTracker] = None
+_test_tracker: TestItemTracker | None = None
 
 
 def get_test_tracker() -> TestItemTracker:

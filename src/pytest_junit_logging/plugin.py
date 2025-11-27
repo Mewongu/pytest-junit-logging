@@ -81,7 +81,7 @@ def pytest_runtest_teardown(item, nextitem):
 def pytest_runtest_makereport(item, call):
     """Capture test reports including assertion failures."""
     if call.when == "call" and call.excinfo:
-        if call.excinfo.type == AssertionError:
+        if issubclass(call.excinfo.type, AssertionError):
             # Extract assertion message from the exception
             assertion_message = str(call.excinfo.value)
 
