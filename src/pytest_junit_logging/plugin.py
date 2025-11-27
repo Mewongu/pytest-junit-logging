@@ -93,6 +93,9 @@ def pytest_fixture_post_finalizer(fixturedef, request):
     """Called after each fixture finalizer is executed."""
     tracker = get_test_tracker()
     tracker.set_fixture_context(fixturedef, request, "teardown")
+    
+    # Clear fixture context after finalizer
+    tracker.set_fixture_context(None, None, "")
 
 
 def pytest_sessionfinish(session, exitstatus):
