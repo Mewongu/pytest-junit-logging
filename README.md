@@ -2,7 +2,6 @@
 
 [![Test](https://github.com/Mewongu/pytest-junit-logging/workflows/Test/badge.svg)](https://github.com/Mewongu/pytest-junit-logging/actions/workflows/test.yml)
 [![Code Quality](https://github.com/Mewongu/pytest-junit-logging/workflows/Code%20Quality/badge.svg)](https://github.com/Mewongu/pytest-junit-logging/actions/workflows/quality.yml)
-[![Integration Tests](https://github.com/Mewongu/pytest-junit-logging/workflows/Integration%20Tests/badge.svg)](https://github.com/Mewongu/pytest-junit-logging/actions/workflows/integration.yml)
 [![PyPI version](https://badge.fury.io/py/pytest-junit-logging.svg)](https://badge.fury.io/py/pytest-junit-logging)
 [![Python versions](https://img.shields.io/pypi/pyversions/pytest-junit-logging.svg)](https://pypi.org/project/pytest-junit-logging/)
 

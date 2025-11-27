@@ -272,10 +272,10 @@ class TestItemTracker:
     
     def _get_module_from_test_id(self, test_id: str) -> str:
         """Extract module name from test item ID."""
-        # test_id format: "tests_example.test_module_a.TestClassA.test_a"
+        # test_id format: "tests.test_module_a.TestClassA.test_a"
         parts = test_id.split(".")
         if len(parts) >= 2:
-            return ".".join(parts[:2])  # "tests_example.test_module_a"
+            return ".".join(parts[:2])  # "tests.test_module_a"
         return test_id
 
 
