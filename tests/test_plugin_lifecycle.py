@@ -2,18 +2,19 @@
 Tests for plugin lifecycle and hook integration.
 """
 
-import pytest
 import xml.etree.ElementTree as ET
-from unittest.mock import patch, MagicMock, call
+from unittest.mock import MagicMock, call, patch
+
+import pytest
 
 from pytest_junit_logging.plugin import (
     pytest_configure,
-    pytest_runtest_setup,
-    pytest_runtest_call,
-    pytest_runtest_teardown,
-    pytest_fixture_setup,
     pytest_fixture_post_finalizer,
+    pytest_fixture_setup,
+    pytest_runtest_call,
     pytest_runtest_makereport,
+    pytest_runtest_setup,
+    pytest_runtest_teardown,
     pytest_sessionfinish,
 )
 
@@ -201,16 +202,15 @@ class TestSessionFinalization:
 
             # Should process each testcase
             assert mock_add_logs.call_count == 2
-            expected_calls = [
-                call(
-                    mock_add_logs.call_args_list[0][0][0],
-                    "tests.test_example.TestClass.test_method_a",
-                ),
-                call(
-                    mock_add_logs.call_args_list[1][0][0],
-                    "tests.test_example.TestClass.test_method_b",
-                ),
-            ]
+
+            call(
+                mock_add_logs.call_args_list[0][0][0],
+                "tests.test_example.TestClass.test_method_a",
+            )
+            call(
+                mock_add_logs.call_args_list[1][0][0],
+                "tests.test_example.TestClass.test_method_b",
+            )
 
             # Verify XML file was processed correctly
             tree = ET.parse(xml_file)

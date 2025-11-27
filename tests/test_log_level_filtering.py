@@ -2,18 +2,15 @@
 Tests for log level filtering functionality.
 """
 
-import pytest
 import logging
-import sys
-import tempfile
 import subprocess
-from pathlib import Path
-from textwrap import dedent
-from unittest.mock import patch, MagicMock
+import sys
 import xml.etree.ElementTree as ET
+from textwrap import dedent
+from unittest.mock import MagicMock, patch
 
+from pytest_junit_logging.log_capture import install_log_capture
 from pytest_junit_logging.plugin import pytest_addoption, pytest_configure
-from pytest_junit_logging.log_capture import install_log_capture, get_log_capture
 
 
 class TestCommandLineOption:
@@ -81,9 +78,10 @@ class TestLogLevelFiltering:
 
     def test_install_log_capture_with_custom_level(self):
         """Test install_log_capture respects custom log level."""
-        with patch("pytest_junit_logging.log_capture.logging.getLogger") as mock_get_logger, patch(
-            "pytest_junit_logging.log_capture.get_log_capture"
-        ) as mock_get_capture:
+        with (
+            patch("pytest_junit_logging.log_capture.logging.getLogger") as mock_get_logger,
+            patch("pytest_junit_logging.log_capture.get_log_capture") as mock_get_capture,
+        ):
             mock_root_logger = MagicMock()
             mock_root_logger.level = logging.ERROR  # Higher than WARNING
             mock_root_logger.handlers = []
@@ -183,10 +181,10 @@ class TestEndToEndLogLevelFiltering:
         test_content = dedent(
             """
             import logging
-            
+
             def test_with_various_log_levels():
                 logging.debug("This debug message should be filtered out")
-                logging.info("This info message should be filtered out") 
+                logging.info("This info message should be filtered out")
                 logging.warning("This warning message should appear")
                 logging.error("This error message should appear")
                 assert True
@@ -243,7 +241,7 @@ class TestEndToEndLogLevelFiltering:
         test_content = dedent(
             """
             import logging
-            
+
             def test_with_error_level_only():
                 logging.warning("This warning should be filtered out")
                 logging.error("This error should appear")
@@ -297,10 +295,10 @@ class TestEndToEndLogLevelFiltering:
         test_content = dedent(
             """
             import logging
-            
+
             def test_with_all_levels():
                 logging.debug("Debug message")
-                logging.info("Info message") 
+                logging.info("Info message")
                 logging.warning("Warning message")
                 logging.error("Error message")
                 assert True
@@ -354,7 +352,7 @@ class TestEndToEndLogLevelFiltering:
         test_content = dedent(
             """
             import logging
-            
+
             def test_with_assertion_failure():
                 logging.debug("Debug before assertion")
                 assert 1 == 2, "Custom assertion message"

@@ -2,13 +2,9 @@
 End-to-end integration tests for the complete plugin functionality.
 """
 
-import pytest
-import sys
-import tempfile
 import subprocess
+import sys
 import xml.etree.ElementTree as ET
-import logging
-from pathlib import Path
 from textwrap import dedent
 
 
@@ -26,19 +22,19 @@ class TestEndToEndIntegration:
             """
             import pytest
             import logging
-            
+
             @pytest.fixture(scope="session")
             def session_fixture():
                 logging.info("Session fixture setup")
                 yield "session_data"
                 logging.info("Session fixture teardown")
-            
-            @pytest.fixture(scope="module")  
+
+            @pytest.fixture(scope="module")
             def module_fixture():
                 logging.info("Module fixture setup")
                 yield "module_data"
                 logging.info("Module fixture teardown")
-            
+
             @pytest.fixture(scope="function")
             def function_fixture():
                 logging.info("Function fixture setup")
@@ -53,18 +49,18 @@ class TestEndToEndIntegration:
             """
             import logging
             import pytest
-            
+
             class TestExample:
                 def test_with_all_fixtures(self, session_fixture, module_fixture, function_fixture):
                     logging.info("Test execution log")
                     assert session_fixture == "session_data"
-                    assert module_fixture == "module_data" 
+                    assert module_fixture == "module_data"
                     assert function_fixture == "function_data"
-                
+
                 def test_with_session_only(self, session_fixture):
                     logging.debug("Another test log")
                     assert session_fixture == "session_data"
-            
+
             def test_function_level(function_fixture):
                 logging.warning("Function level test")
                 assert function_fixture == "function_data"
@@ -76,7 +72,7 @@ class TestEndToEndIntegration:
         test_content_b = dedent(
             """
             import logging
-            
+
             def test_different_module():
                 logging.error("Different module test")
                 assert True
@@ -136,7 +132,7 @@ class TestEndToEndIntegration:
         test_content = dedent(
             """
             import logging
-            
+
             def test_assertion_failure():
                 logging.info("Before assertion")
                 assert 1 == 2, "This assertion should fail"
@@ -181,7 +177,7 @@ class TestEndToEndIntegration:
             """
             import logging
             import pytest
-            
+
             @pytest.mark.parametrize("value", [1, 2, 3])
             def test_parametrized(value):
                 logging.info(f"Testing with value: {value}")
@@ -223,7 +219,7 @@ class TestEndToEndIntegration:
         test_content = dedent(
             """
             import logging
-            
+
             def test_with_logs():
                 logging.info("This log should not be captured")
                 assert True
@@ -257,19 +253,19 @@ class TestRealWorldScenarios:
             """
             import pytest
             import logging
-            
+
             @pytest.fixture(scope="session")
             def database_session():
                 logging.info("Setting up database session")
                 yield "db_session"
                 logging.info("Tearing down database session")
-            
+
             @pytest.fixture(scope="module")
             def api_client(database_session):
                 logging.info(f"Creating API client with {database_session}")
                 yield "api_client"
                 logging.info("Closing API client")
-            
+
             @pytest.fixture
             def user_data(api_client):
                 logging.info(f"Fetching user data via {api_client}")
@@ -282,11 +278,11 @@ class TestRealWorldScenarios:
         test_content = dedent(
             """
             import logging
-            
+
             def test_user_operations(user_data):
                 logging.info(f"Testing with user: {user_data}")
                 assert user_data["user_id"] == 123
-            
+
             def test_another_user_operation(user_data):
                 logging.debug("Another operation")
                 assert "user_id" in user_data
@@ -319,7 +315,7 @@ class TestRealWorldScenarios:
         assert xml_file.exists()
 
         # Debug: Print the actual XML content first
-        with open(xml_file, "r") as f:
+        with open(xml_file) as f:
             xml_content = f.read()
             print("Generated XML:", xml_content)
 
@@ -344,7 +340,7 @@ class TestRealWorldScenarios:
             """
             import pytest
             import logging
-            
+
             @pytest.fixture
             def failing_fixture():
                 logging.info("Fixture setup")
@@ -358,7 +354,7 @@ class TestRealWorldScenarios:
         test_content = dedent(
             """
             import logging
-            
+
             def test_with_failing_fixture(failing_fixture):
                 logging.info(f"Test running with {failing_fixture}")
                 assert failing_fixture == "data"
@@ -367,7 +363,7 @@ class TestRealWorldScenarios:
         (test_project / "test_failing.py").write_text(test_content)
 
         xml_file = test_project / "results.xml"
-        result = subprocess.run(
+        subprocess.run(
             [sys.executable, "-m", "pytest", str(test_project), f"--junit-xml={xml_file}", "-v"],
             capture_output=True,
             text=True,
@@ -397,7 +393,7 @@ class TestRealWorldScenarios:
                 f"""
                 import logging
                 import time
-                
+
                 def test_concurrent_{i}():
                     logging.info("Test {i} starting")
                     time.sleep(0.1)  # Simulate some work

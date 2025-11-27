@@ -3,14 +3,10 @@ Unit tests for log capture functionality.
 """
 
 import logging
-from datetime import datetime, timezone
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
-import pytest
 from pytest_junit_logging.log_capture import (
-    TestLogCapture,
     LogEntry,
-    TestItemTracker,
     get_log_capture,
     get_test_tracker,
     install_log_capture,

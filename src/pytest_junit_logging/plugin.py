@@ -2,22 +2,22 @@
 Core pytest-junit-logging plugin implementation.
 """
 
-import pytest
 import logging
-from .log_capture import (
-    install_log_capture,
-    uninstall_log_capture,
-    get_test_tracker,
-    get_log_capture,
-    LogEntry,
-)
-from .xml_formatter import add_logs_to_testcase, get_testcase_id_from_element
-import traceback
-import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 
+import defusedxml.ElementTree as DET  # type: ignore
 
-def pytest_addoption(parser):
+from .log_capture import (
+    LogEntry,
+    get_log_capture,
+    get_test_tracker,
+    install_log_capture,
+    uninstall_log_capture,
+)
+from .xml_formatter import add_logs_to_testcase, get_testcase_id_from_element
+
+
+def pytest_addoption(parser):  # ignore:
     """Add plugin-specific command line options."""
     group = parser.getgroup("junit-logging", "JUnit XML log integration")
     group.addoption(
@@ -153,7 +153,7 @@ def modify_junit_xml(xml_path: str) -> None:
     """Modify the generated JUnit XML to include log entries."""
     try:
         # Parse the existing XML
-        tree = ET.parse(xml_path)
+        tree = DET.parse(xml_path)
         root = tree.getroot()
 
         # Find all testcase elements and add logs

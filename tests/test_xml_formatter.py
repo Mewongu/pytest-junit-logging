@@ -2,19 +2,16 @@
 Tests for XML formatting functionality.
 """
 
-import pytest
 import xml.etree.ElementTree as ET
-import tempfile
-from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
-from pytest_junit_logging.xml_formatter import (
-    format_log_entry_for_xml,
-    add_logs_to_testcase,
-    get_testcase_id_from_element,
-    _get_relative_path,
-)
 from pytest_junit_logging.log_capture import LogEntry
+from pytest_junit_logging.xml_formatter import (
+    _get_relative_path,
+    add_logs_to_testcase,
+    format_log_entry_for_xml,
+    get_testcase_id_from_element,
+)
 
 
 class TestLogEntryXMLFormatting:

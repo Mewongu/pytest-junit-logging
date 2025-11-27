@@ -18,7 +18,7 @@ jobs:
           # Python 3.10 with all pytest versions
           - python-version: "3.10"
             pytest-version: "6"
-          - python-version: "3.10" 
+          - python-version: "3.10"
             pytest-version: "7"
           - python-version: "3.10"
             pytest-version: "8"
@@ -59,4 +59,3 @@ jobs:
     - name: Run tests
       run: |
         pytest tests/ -v
-

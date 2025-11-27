@@ -19,9 +19,9 @@ mkdir -p reports
 run_test() {
     local service=$1
     local description=$2
-    
+
     echo -e "${YELLOW}Testing: $description${NC}"
-    
+
     if docker-compose -f docker-compose.test.yml run --build --rm "$service"; then
         echo -e "${GREEN}✅ $description - PASSED${NC}"
         return 0

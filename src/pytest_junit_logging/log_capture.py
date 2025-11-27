@@ -3,11 +3,10 @@ Log capture infrastructure for pytest-junit-logging.
 """
 
 import logging
-import time
 import threading
-from typing import List, Dict, Optional, Any, Set
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from typing import Any, Optional
 
 
 @dataclass
@@ -29,9 +28,9 @@ class TestLogCapture(logging.Handler):
 
     def __init__(self):
         super().__init__()
-        self.logs: List[LogEntry] = []
+        self.logs: list[LogEntry] = []
         self.current_test_item: Optional[str] = None
-        self.current_fixture_context: Optional[Dict[str, Any]] = None
+        self.current_fixture_context: Optional[dict[str, Any]] = None
         self._lock = threading.Lock()
 
     def set_current_test_item(self, test_item_id: Optional[str]) -> None:
@@ -39,7 +38,7 @@ class TestLogCapture(logging.Handler):
         with self._lock:
             self.current_test_item = test_item_id
 
-    def set_fixture_context(self, fixture_context: Optional[Dict[str, Any]]) -> None:
+    def set_fixture_context(self, fixture_context: Optional[dict[str, Any]]) -> None:
         """Set the current fixture context for log association."""
         with self._lock:
             self.current_fixture_context = fixture_context
@@ -89,7 +88,7 @@ class TestLogCapture(logging.Handler):
         """Determine the appropriate test context for a log entry."""
         if self.current_fixture_context and "test_item_id" in self.current_fixture_context:
             # During fixture execution, use the test item from fixture context
-            return self.current_fixture_context["test_item_id"]
+            return self.current_fixture_context.get("test_item_id")
         else:
             # During test execution, use the current test item
             return self.current_test_item
@@ -102,7 +101,7 @@ class TestLogCapture(logging.Handler):
             log_entry.fixture_scope = self.current_fixture_context["scope"]
             log_entry.fixture_phase = self.current_fixture_context["phase"]
 
-    def get_logs_for_test(self, test_item_id: str) -> List[LogEntry]:
+    def get_logs_for_test(self, test_item_id: str) -> list[LogEntry]:
         """Get all logs associated with a specific test item."""
         with self._lock:
             return [log for log in self.logs if log.test_item_id == test_item_id]
@@ -157,13 +156,13 @@ class TestItemTracker:
 
     def __init__(self):
         self.current_test_item: Optional[str] = None
-        self.current_fixture_context: Optional[Dict[str, Any]] = None
-        self.session_logs: List[LogEntry] = []
-        self.module_logs: Dict[str, List[LogEntry]] = {}
-        self.test_logs: Dict[str, List[LogEntry]] = {}
+        self.current_fixture_context: Optional[dict[str, Any]] = None
+        self.session_logs: list[LogEntry] = []
+        self.module_logs: dict[str, list[LogEntry]] = {}
+        self.test_logs: dict[str, list[LogEntry]] = {}
         self._lock = threading.Lock()
 
-    def get_test_item_id(self, item) -> str:
+    def get_test_item_id(self, item) -> str:  # type: ignore[no-untyped-def]
         """Generate a unique ID for a test item."""
         # Match the format used by pytest's JUnit XML plugin
         # Use the full nodeid to get the package path
@@ -175,11 +174,11 @@ class TestItemTracker:
         else:
             return f"{module_path}.{item.name}"
 
-    def get_module_id(self, item) -> str:
+    def get_module_id(self, item) -> str:  # type: ignore[no-untyped-def]
         """Get the module ID for a test item."""
-        return item.module.__name__
+        return item.module.__name__  # type: ignore[no-any-return]
 
-    def set_current_test_item(self, item) -> None:
+    def set_current_test_item(self, item) -> None:  # type: ignore[no-untyped-def]
         """Set the current test item context."""
         with self._lock:
             if item:
@@ -190,7 +189,7 @@ class TestItemTracker:
         # Update log capture handler
         get_log_capture().set_current_test_item(self.current_test_item)
 
-    def set_fixture_context(self, fixturedef, request, phase: str) -> None:
+    def set_fixture_context(self, fixturedef, request, phase: str) -> None:  # type: ignore[no-untyped-def]
         """Set the current fixture context for log capture."""
         with self._lock:
             if fixturedef and request:
@@ -218,12 +217,12 @@ class TestItemTracker:
         # Update log capture handler with fixture context
         get_log_capture().set_fixture_context(self.current_fixture_context)
 
-    def _generate_test_id_from_node(self, node) -> str:
+    def _generate_test_id_from_node(self, node) -> str:  # type: ignore[no-untyped-def]
         """Generate test ID from a pytest node."""
         # Similar to get_test_item_id but from a node
         nodeid = node.nodeid
         parts = nodeid.split("::")
-        module_path = parts[0].replace("/", ".").replace(".py", "")
+        module_path: str = parts[0].replace("/", ".").replace(".py", "")
 
         if len(parts) >= 3:  # module::class::test
             class_name = parts[1]
@@ -235,7 +234,7 @@ class TestItemTracker:
         else:
             return module_path
 
-    def associate_logs_with_test(self, test_item_id: str) -> List[LogEntry]:
+    def associate_logs_with_test(self, test_item_id: str) -> list[LogEntry]:
         """Get all logs that should be associated with a test item."""
         with self._lock:
             all_logs = []

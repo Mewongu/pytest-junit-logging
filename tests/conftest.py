@@ -2,12 +2,13 @@
 Test configuration and fixtures for pytest-junit-logging tests.
 """
 
-import pytest
 import tempfile
-import os
 from pathlib import Path
 from unittest.mock import MagicMock
-from pytest_junit_logging.log_capture import TestLogCapture, LogEntry, TestItemTracker
+
+import pytest
+
+from pytest_junit_logging.log_capture import LogEntry, TestItemTracker, TestLogCapture
 
 
 @pytest.fixture

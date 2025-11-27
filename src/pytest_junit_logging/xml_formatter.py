@@ -2,11 +2,11 @@
 JUnit XML formatting with log integration.
 """
 
-import xml.etree.ElementTree as ET
-from typing import List
-from .log_capture import LogEntry, get_test_tracker
 import html
 import os
+import xml.etree.ElementTree as ET  # nosec B405
+
+from .log_capture import LogEntry, get_test_tracker
 
 
 def format_log_entry_for_xml(log_entry: LogEntry) -> ET.Element:
@@ -71,8 +71,8 @@ def add_logs_to_testcase(testcase_element: ET.Element, test_item_id: str) -> Non
 
 def get_testcase_id_from_element(testcase_element: ET.Element) -> str:
     """Extract test item ID from a testcase XML element."""
-    classname = testcase_element.get("classname", "")
-    name = testcase_element.get("name", "")
+    classname: str = testcase_element.get("classname", "")
+    name: str = testcase_element.get("name", "")
 
     # Combine classname and name - the XML already has the correct format
     if classname:

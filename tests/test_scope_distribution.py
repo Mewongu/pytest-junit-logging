@@ -2,10 +2,9 @@
 Tests for fixture scope distribution logic.
 """
 
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
-from pytest_junit_logging.log_capture import LogEntry, TestItemTracker, get_test_tracker
+from pytest_junit_logging.log_capture import LogEntry
 
 
 class TestScopeDistribution:

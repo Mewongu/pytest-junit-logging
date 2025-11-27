@@ -40,7 +40,7 @@ repos:
     hooks:
       - id: mypy
         files: ^src/
-        additional_dependencies: [types-setuptools]
+        additional_dependencies: [types-setuptools,defusedxml]
         args: [--python-version=3.10]
 
   # Security checks with Bandit
@@ -49,5 +49,5 @@ repos:
     hooks:
       - id: bandit
         args: ['-c', 'pyproject.toml']
-        additional_dependencies: ['bandit[toml]']
+        additional_dependencies: ['bandit[toml]', 'pbr']
         files: ^src/

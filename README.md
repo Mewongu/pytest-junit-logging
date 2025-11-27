@@ -53,7 +53,7 @@ pytest --junit-xml=results.xml --junit-log-level=ERROR
 import logging
 import pytest
 
-@pytest.fixture(scope="session") 
+@pytest.fixture(scope="session")
 def database():
     logging.info("Setting up database connection")
     yield "db_connection"
@@ -68,10 +68,10 @@ def test_user_creation(database, user_data):
     logging.info("Starting user creation test")
     logging.debug(f"Using database: {database}")
     logging.debug(f"User data: {user_data}")
-    
+
     # Simulate test logic
     assert user_data["id"] == 123
-    
+
     logging.info("User creation test completed successfully")
 
 def test_user_validation(database, user_data):
@@ -254,7 +254,7 @@ Once installed, pre-commit will automatically run:
 - Black (code formatting)
 - Ruff (linting with auto-fixes)
 - MyPy (type checking)
-- Bandit (security scanning)  
+- Bandit (security scanning)
 - Basic file checks (trailing whitespace, YAML validation, etc.)
 
 This ensures all committed code meets quality standards and matches the CI pipeline checks.
@@ -266,7 +266,7 @@ This ensures all committed code meets quality standards and matches the CI pipel
 The project uses GitHub Actions for comprehensive CI/CD:
 
 - **Test Matrix**: Runs all tests across Python 3.10-3.13 and pytest 6.x-8.x combinations
-- **Code Quality**: Automated linting (ruff), formatting (black), and type checking (mypy)  
+- **Code Quality**: Automated linting (ruff), formatting (black), and type checking (mypy)
 - **Integration Tests**: End-to-end testing with real pytest runs and XML validation
 - **Security Scanning**: Automated security scans with bandit
 - **Coverage Reporting**: Code coverage tracking and reporting

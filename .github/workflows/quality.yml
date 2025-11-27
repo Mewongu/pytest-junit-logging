@@ -90,13 +90,13 @@ jobs:
         python -c "
         import re
         import ast
-        
+
         with open('README.md', 'r') as f:
             content = f.read()
-        
+
         # Find Python code blocks
         code_blocks = re.findall(r'```python\n(.*?)\n```', content, re.DOTALL)
-        
+
         for i, block in enumerate(code_blocks):
             try:
                 # Remove pytest command examples and focus on Python code
@@ -107,7 +107,7 @@ jobs:
                 print(f'✗ Code block {i+1} syntax error: {e}')
                 print(f'Block content: {block}')
                 exit(1)
-        
+
         print(f'All {len(code_blocks)} code blocks validated successfully')
         "
 
@@ -122,7 +122,7 @@ jobs:
             from importlib.metadata import entry_points
         except ImportError:
             from importlib_metadata import entry_points
-        
+
         eps = [ep for ep in entry_points().get('pytest11', []) if ep.name == 'pytest_junit_logging']
         if not eps:
             raise RuntimeError('Entry point not found')
