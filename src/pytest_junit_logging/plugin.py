@@ -10,7 +10,9 @@ from .log_capture import (
     get_log_capture,
     LogEntry
 )
+from .xml_formatter import add_logs_to_testcase, get_testcase_id_from_element
 import traceback
+import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 
 
@@ -83,8 +85,35 @@ def pytest_runtest_makereport(item, call):
 
 def pytest_sessionfinish(session, exitstatus):
     """Called after whole test run finished."""
+    # Modify JUnit XML if it was generated
+    if hasattr(session.config, "option") and hasattr(session.config.option, "xmlpath"):
+        xmlpath = session.config.option.xmlpath
+        if xmlpath:
+            modify_junit_xml(xmlpath)
+    
     # Clean up log capture
     uninstall_log_capture()
     
     # Clear test context
     get_test_tracker().set_current_test_item(None)
+
+
+def modify_junit_xml(xml_path: str) -> None:
+    """Modify the generated JUnit XML to include log entries."""
+    try:
+        # Parse the existing XML
+        tree = ET.parse(xml_path)
+        root = tree.getroot()
+        
+        # Find all testcase elements
+        for testcase in root.iter("testcase"):
+            test_id = get_testcase_id_from_element(testcase)
+            add_logs_to_testcase(testcase, test_id)
+        
+        # Write back the modified XML
+        tree.write(xml_path, encoding="utf-8", xml_declaration=True)
+        
+    except Exception as e:
+        # Don't let XML modification errors break the test run
+        print(f"Warning: Failed to modify JUnit XML: {e}")
+        pass
