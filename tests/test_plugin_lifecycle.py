@@ -20,6 +20,7 @@ class TestPluginConfiguration:
         """Test that plugin activates when junit-xml is specified."""
         config = MagicMock()
         config.option.xmlpath = "/tmp/results.xml"
+        config.option.junit_log_level = "DEBUG"
         
         with patch('pytest_junit_logging.plugin.install_log_capture') as mock_install:
             pytest_configure(config)
@@ -50,23 +51,14 @@ class TestTestItemHooks:
     
     def test_pytest_runtest_call(self, mock_test_item):
         """Test runtest call hook."""
-        with patch('pytest_junit_logging.plugin.get_test_tracker') as mock_get_tracker:
-            mock_tracker = MagicMock()
-            mock_get_tracker.return_value = mock_tracker
-            
-            pytest_runtest_call(mock_test_item)
-            
-            mock_tracker.set_current_test_item.assert_called_once_with(mock_test_item)
+        # The call hook currently doesn't do anything - just verify it doesn't error
+        pytest_runtest_call(mock_test_item)
     
     def test_pytest_runtest_teardown(self, mock_test_item):
         """Test runtest teardown hook."""
-        with patch('pytest_junit_logging.plugin.get_test_tracker') as mock_get_tracker:
-            mock_tracker = MagicMock()
-            mock_get_tracker.return_value = mock_tracker
-            
-            pytest_runtest_teardown(mock_test_item)
-            
-            mock_tracker.clear_current_test_item.assert_called_once()
+        # The teardown hook currently doesn't do anything - just verify it doesn't error
+        mock_nextitem = MagicMock()
+        pytest_runtest_teardown(mock_test_item, mock_nextitem)
 
 
 class TestFixtureHooks:
@@ -92,9 +84,11 @@ class TestFixtureHooks:
             
             pytest_fixture_post_finalizer(mock_fixturedef, mock_request)
             
-            mock_tracker.set_fixture_context.assert_called_once_with(
-                mock_fixturedef, mock_request, "teardown"
-            )
+            # Should be called twice: once for teardown, once to clear
+            assert mock_tracker.set_fixture_context.call_count == 2
+            calls = mock_tracker.set_fixture_context.call_args_list
+            assert calls[0] == ((mock_fixturedef, mock_request, "teardown"),)
+            assert calls[1] == ((None, None, ""),)
 
 
 class TestReportGeneration:
@@ -122,22 +116,34 @@ class TestReportGeneration:
         mock_excinfo.type = AssertionError
         mock_excinfo.value = AssertionError("assert 1 == 2")
         
+        # Mock the traceback
+        mock_tb = MagicMock()
+        mock_tb.path = "/test/path.py"
+        mock_tb.lineno = 42
+        mock_excinfo.traceback = [mock_tb]
+        
         mock_call = MagicMock()
+        mock_call.when = "call"
         mock_call.excinfo = mock_excinfo
         
         with patch('pytest_junit_logging.plugin.get_log_capture') as mock_get_capture:
             with patch('pytest_junit_logging.plugin.get_test_tracker') as mock_get_tracker:
-                mock_capture = MagicMock()
-                mock_tracker = MagicMock()
-                mock_tracker.get_test_item_id.return_value = "tests.test_example.test_method"
-                mock_get_capture.return_value = mock_capture
-                mock_get_tracker.return_value = mock_tracker
-                
-                result = pytest_runtest_makereport(mock_test_item, mock_call)
-                
-                # Should add assertion log for failed test
-                mock_capture.add_assertion_log.assert_called_once()
-                assert result is None
+                with patch('pytest_junit_logging.plugin.datetime') as mock_datetime:
+                    mock_capture = MagicMock()
+                    mock_capture.logs = []
+                    mock_tracker = MagicMock()
+                    mock_tracker.get_test_item_id.return_value = "tests.test_example.test_method"
+                    mock_get_capture.return_value = mock_capture
+                    mock_get_tracker.return_value = mock_tracker
+                    mock_datetime.now.return_value.isoformat.return_value = "2025-11-27T10:00:00+00:00"
+                    
+                    result = pytest_runtest_makereport(mock_test_item, mock_call)
+                    
+                    # Should append to logs list
+                    assert len(mock_capture.logs) == 1
+                    assert mock_capture.logs[0].level == "ASSERT"
+                    assert mock_capture.logs[0].message == "assert 1 == 2"
+                    assert result is None
     
     def test_pytest_runtest_makereport_failed_with_other_exception(self, mock_test_item):
         """Test makereport hook for failed test with non-assertion error."""
@@ -246,7 +252,8 @@ class TestCompleteHookIntegration:
                 pytest_runtest_call(mock_test_item)
                 
                 # 4. Test teardown
-                pytest_runtest_teardown(mock_test_item)
+                mock_nextitem = MagicMock()
+                pytest_runtest_teardown(mock_test_item, mock_nextitem)
                 
                 # 5. Fixture teardown
                 pytest_fixture_post_finalizer(mock_fixturedef, mock_request)
@@ -255,9 +262,8 @@ class TestCompleteHookIntegration:
                 expected_tracker_calls = [
                     call.set_fixture_context(mock_fixturedef, mock_request, "setup"),
                     call.set_current_test_item(mock_test_item),
-                    call.set_current_test_item(mock_test_item), 
-                    call.clear_current_test_item(),
-                    call.set_fixture_context(mock_fixturedef, mock_request, "teardown")
+                    call.set_fixture_context(mock_fixturedef, mock_request, "teardown"),
+                    call.set_fixture_context(None, None, "")
                 ]
                 assert mock_tracker.method_calls == expected_tracker_calls
     

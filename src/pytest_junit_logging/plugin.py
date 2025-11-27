@@ -53,8 +53,12 @@ def pytest_sessionstart(session):
 
 def pytest_runtest_setup(item):
     """Called before each test item is executed."""
-    tracker = get_test_tracker()
-    tracker.set_current_test_item(item)
+    try:
+        tracker = get_test_tracker()
+        tracker.set_current_test_item(item)
+    except Exception:
+        # Don't let plugin errors break test execution
+        pass
 
 
 def pytest_runtest_call(item):
@@ -104,17 +108,25 @@ def pytest_runtest_makereport(item, call):
 
 def pytest_fixture_setup(fixturedef, request):
     """Called before each fixture is executed."""
-    tracker = get_test_tracker()
-    tracker.set_fixture_context(fixturedef, request, "setup")
+    try:
+        tracker = get_test_tracker()
+        tracker.set_fixture_context(fixturedef, request, "setup")
+    except Exception:
+        # Don't let plugin errors break test execution
+        pass
 
 
 def pytest_fixture_post_finalizer(fixturedef, request):
     """Called after each fixture finalizer is executed."""
-    tracker = get_test_tracker()
-    tracker.set_fixture_context(fixturedef, request, "teardown")
-    
-    # Clear fixture context after finalizer
-    tracker.set_fixture_context(None, None, "")
+    try:
+        tracker = get_test_tracker()
+        tracker.set_fixture_context(fixturedef, request, "teardown")
+        
+        # Clear fixture context after finalizer
+        tracker.set_fixture_context(None, None, "")
+    except Exception:
+        # Don't let plugin errors break test execution
+        pass
 
 
 def pytest_sessionfinish(session, exitstatus):
