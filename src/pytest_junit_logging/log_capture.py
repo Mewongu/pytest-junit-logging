@@ -82,9 +82,9 @@ class TestLogCapture(logging.Handler):
     
     def _determine_test_context(self) -> Optional[str]:
         """Determine the appropriate test context for a log entry."""
-        if self.current_fixture_context:
-            # During fixture execution, use the current test item if available
-            return self.current_test_item
+        if self.current_fixture_context and "test_item_id" in self.current_fixture_context:
+            # During fixture execution, use the test item from fixture context
+            return self.current_fixture_context["test_item_id"]
         else:
             # During test execution, use the current test item
             return self.current_test_item
@@ -185,17 +185,46 @@ class TestItemTracker:
         """Set the current fixture context for log capture."""
         with self._lock:
             if fixturedef and request:
+                # For fixtures, we need to determine which test item they're associated with
+                test_item = getattr(request, 'node', None)
+                test_item_id = None
+                if test_item and hasattr(test_item, 'nodeid'):
+                    # Generate test ID from the request node
+                    test_item_id = self._generate_test_id_from_node(test_item)
+                
                 self.current_fixture_context = {
                     "name": fixturedef.argname,
                     "scope": fixturedef.scope,
                     "phase": phase,  # "setup" or "teardown"
-                    "request": request
+                    "request": request,
+                    "test_item_id": test_item_id
                 }
+                
+                # Temporarily set the current test item if not set
+                if not self.current_test_item and test_item_id:
+                    self.current_test_item = test_item_id
             else:
                 self.current_fixture_context = None
         
         # Update log capture handler with fixture context
         get_log_capture().set_fixture_context(self.current_fixture_context)
+    
+    def _generate_test_id_from_node(self, node) -> str:
+        """Generate test ID from a pytest node."""
+        # Similar to get_test_item_id but from a node
+        nodeid = node.nodeid
+        parts = nodeid.split("::")
+        module_path = parts[0].replace("/", ".").replace(".py", "")
+        
+        if len(parts) >= 3:  # module::class::test
+            class_name = parts[1]
+            test_name = parts[2]
+            return f"{module_path}.{class_name}.{test_name}"
+        elif len(parts) >= 2:  # module::test
+            test_name = parts[1]
+            return f"{module_path}.{test_name}"
+        else:
+            return module_path
     
     def associate_logs_with_test(self, test_item_id: str) -> List[LogEntry]:
         """Get all logs that should be associated with a test item."""
