@@ -5,7 +5,7 @@ Log capture infrastructure for pytest-junit-logging.
 import logging
 import time
 import threading
-from typing import List, Dict, Optional, Any
+from typing import List, Dict, Optional, Any, Set
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
@@ -106,3 +106,70 @@ def uninstall_log_capture() -> None:
     
     if capture in root_logger.handlers:
         root_logger.removeHandler(capture)
+
+
+class TestItemTracker:
+    """Tracks test item context and manages log association."""
+    
+    def __init__(self):
+        self.current_test_item: Optional[str] = None
+        self.session_logs: List[LogEntry] = []
+        self.module_logs: Dict[str, List[LogEntry]] = {}
+        self.test_logs: Dict[str, List[LogEntry]] = {}
+        self._lock = threading.Lock()
+    
+    def get_test_item_id(self, item) -> str:
+        """Generate a unique ID for a test item."""
+        # Handle parametrized tests properly
+        return f"{item.module.__name__}.{item.cls.__name__ if item.cls else ''}.{item.name}".strip('.')
+    
+    def get_module_id(self, item) -> str:
+        """Get the module ID for a test item."""
+        return item.module.__name__
+    
+    def set_current_test_item(self, item) -> None:
+        """Set the current test item context."""
+        with self._lock:
+            if item:
+                self.current_test_item = self.get_test_item_id(item)
+            else:
+                self.current_test_item = None
+        
+        # Update log capture handler
+        get_log_capture().set_current_test_item(self.current_test_item)
+    
+    def associate_logs_with_test(self, test_item_id: str) -> List[LogEntry]:
+        """Get all logs that should be associated with a test item."""
+        with self._lock:
+            # Start with session logs (appear in all tests)
+            all_logs = self.session_logs.copy()
+            
+            # Add module logs if this test is in that module
+            for module_id, logs in self.module_logs.items():
+                if test_item_id.startswith(module_id):
+                    all_logs.extend(logs)
+            
+            # Add test-specific logs
+            if test_item_id in self.test_logs:
+                all_logs.extend(self.test_logs[test_item_id])
+            
+            # Add logs from the capture handler for this test
+            capture_logs = get_log_capture().get_logs_for_test(test_item_id)
+            all_logs.extend(capture_logs)
+            
+            # Sort by timestamp to maintain chronological order
+            all_logs.sort(key=lambda log: log.timestamp)
+            
+            return all_logs
+
+
+# Global test item tracker
+_test_tracker: Optional[TestItemTracker] = None
+
+
+def get_test_tracker() -> TestItemTracker:
+    """Get the global test item tracker."""
+    global _test_tracker
+    if _test_tracker is None:
+        _test_tracker = TestItemTracker()
+    return _test_tracker
