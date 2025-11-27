@@ -52,7 +52,7 @@ def sample_log_entry():
         message="Test log message",
         filename="/workspace/tests/test_example.py",
         lineno=42,
-        test_item_id="tests.test_example.TestClass.test_method"
+        test_item_id="tests.test_example.TestClass.test_method",
     )
 
 

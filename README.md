@@ -224,6 +224,7 @@ The project tests against these combinations:
 
 ### Code Quality
 
+#### Manual Code Quality Checks
 ```bash
 # Format code
 black src/ tests/
@@ -234,6 +235,29 @@ ruff check src/ tests/
 # Type checking
 mypy src/
 ```
+
+#### Pre-commit Hooks (Recommended)
+Install pre-commit to automatically run quality checks before commits:
+
+```bash
+# Install pre-commit
+pip install pre-commit
+
+# Install the git hook scripts
+pre-commit install
+
+# (Optional) Run against all files
+pre-commit run --all-files
+```
+
+Once installed, pre-commit will automatically run:
+- Black (code formatting)
+- Ruff (linting with auto-fixes)
+- MyPy (type checking)
+- Bandit (security scanning)  
+- Basic file checks (trailing whitespace, YAML validation, etc.)
+
+This ensures all committed code meets quality standards and matches the CI pipeline checks.
 
 ## CI/CD and Releases
 
