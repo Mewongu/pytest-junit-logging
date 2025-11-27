@@ -1,5 +1,12 @@
 # pytest-junit-logging
 
+[![Test](https://github.com/USERNAME/pytest-junit-logging/workflows/Test/badge.svg)](https://github.com/USERNAME/pytest-junit-logging/actions/workflows/test.yml)
+[![Code Quality](https://github.com/USERNAME/pytest-junit-logging/workflows/Code%20Quality/badge.svg)](https://github.com/USERNAME/pytest-junit-logging/actions/workflows/quality.yml)
+[![Integration Tests](https://github.com/USERNAME/pytest-junit-logging/workflows/Integration%20Tests/badge.svg)](https://github.com/USERNAME/pytest-junit-logging/actions/workflows/integration.yml)
+[![PyPI version](https://badge.fury.io/py/pytest-junit-logging.svg)](https://badge.fury.io/py/pytest-junit-logging)
+[![Python versions](https://img.shields.io/pypi/pyversions/pytest-junit-logging.svg)](https://pypi.org/project/pytest-junit-logging/)
+[![codecov](https://codecov.io/gh/USERNAME/pytest-junit-logging/branch/main/graph/badge.svg)](https://codecov.io/gh/USERNAME/pytest-junit-logging)
+
 A pytest plugin that captures log output during test execution and embeds it into JUnit XML reports.
 
 ## Features
@@ -229,6 +236,44 @@ ruff check src/ tests/
 # Type checking
 mypy src/
 ```
+
+## CI/CD and Releases
+
+### Automated Testing
+
+The project uses GitHub Actions for comprehensive CI/CD:
+
+- **Test Matrix**: Runs all tests across Python 3.10-3.13 and pytest 6.x-8.x combinations
+- **Code Quality**: Automated linting (ruff), formatting (black), and type checking (mypy)  
+- **Integration Tests**: End-to-end testing with real pytest runs and XML validation
+- **Security Scanning**: Automated security scans with bandit
+- **Coverage Reporting**: Code coverage tracking with codecov
+
+All checks must pass before code can be merged to main.
+
+### Releases
+
+Releases are fully automated:
+
+1. **Create a git tag** with version format `vX.Y.Z` (e.g., `v1.0.0`, `v2.1.3`)
+2. **Push the tag** to trigger the release workflow:
+   ```bash
+   git tag v1.0.0
+   git push origin v1.0.0
+   ```
+3. **Automated pipeline** runs:
+   - Full test suite across all supported versions
+   - Code quality checks
+   - Package building and validation
+   - PyPI publishing (using trusted publishing)
+   - GitHub release creation with changelog
+
+### Version Management
+
+The project uses [setuptools-scm](https://github.com/pypa/setuptools_scm) for automatic version management:
+- Version is automatically derived from git tags
+- No manual version bumping required
+- Supports semantic versioning and pre-releases (e.g., `v1.0.0-beta1`)
 
 ## License
 

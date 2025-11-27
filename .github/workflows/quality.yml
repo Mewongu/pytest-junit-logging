@@ -1,0 +1,129 @@
+name: Code Quality
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  lint:
+    name: Linting
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.10"
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install ruff black mypy
+        pip install -e .
+
+    - name: Check code formatting with Black
+      run: |
+        black --check --diff src/ tests/
+
+    - name: Lint with Ruff
+      run: |
+        ruff check src/ tests/
+
+    - name: Type check with MyPy
+      run: |
+        mypy src/
+
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.10"
+
+    - name: Install bandit
+      run: |
+        python -m pip install --upgrade pip
+        pip install bandit[toml]
+
+    - name: Run bandit security scan
+      run: |
+        bandit -r src/ -f json -o bandit-report.json || true
+        bandit -r src/ -f txt
+
+    - name: Upload bandit report
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: bandit-security-report
+        path: bandit-report.json
+
+  docs:
+    name: Documentation Check
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.10"
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .
+
+    - name: Check README examples syntax
+      run: |
+        # Extract Python code blocks from README and check syntax
+        python -c "
+        import re
+        import ast
+        
+        with open('README.md', 'r') as f:
+            content = f.read()
+        
+        # Find Python code blocks
+        code_blocks = re.findall(r'```python\n(.*?)\n```', content, re.DOTALL)
+        
+        for i, block in enumerate(code_blocks):
+            try:
+                # Remove pytest command examples and focus on Python code
+                if not block.strip().startswith('pytest ') and not block.strip().startswith('pip '):
+                    ast.parse(block)
+                    print(f'✓ Code block {i+1} syntax OK')
+            except SyntaxError as e:
+                print(f'✗ Code block {i+1} syntax error: {e}')
+                print(f'Block content: {block}')
+                exit(1)
+        
+        print(f'All {len(code_blocks)} code blocks validated successfully')
+        "
+
+    - name: Verify plugin can be imported
+      run: |
+        python -c "import pytest_junit_logging.plugin; print('✓ Plugin imports successfully')"
+
+    - name: Check that entry point is valid
+      run: |
+        python -c "
+        import pkg_resources
+        eps = list(pkg_resources.iter_entry_points('pytest11'))
+        plugin_eps = [ep for ep in eps if ep.name == 'pytest_junit_logging']
+        if not plugin_eps:
+            raise RuntimeError('Entry point not found')
+        plugin_ep = plugin_eps[0]
+        plugin = plugin_ep.load()
+        print(f'✓ Entry point {plugin_ep.name} loads successfully: {plugin}')
+        "
