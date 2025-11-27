@@ -4,6 +4,7 @@ Tests for log level filtering functionality.
 
 import pytest
 import logging
+import sys
 import tempfile
 import subprocess
 from pathlib import Path
@@ -80,18 +81,22 @@ class TestLogLevelFiltering:
     
     def test_install_log_capture_with_custom_level(self):
         """Test install_log_capture respects custom log level."""
-        with patch('pytest_junit_logging.log_capture.logging.getLogger') as mock_get_logger:
+        with patch('pytest_junit_logging.log_capture.logging.getLogger') as mock_get_logger, \
+             patch('pytest_junit_logging.log_capture.get_log_capture') as mock_get_capture:
+            
             mock_root_logger = MagicMock()
             mock_root_logger.level = logging.ERROR  # Higher than WARNING
             mock_root_logger.handlers = []
             mock_get_logger.return_value = mock_root_logger
             
+            mock_capture = MagicMock()
+            mock_get_capture.return_value = mock_capture
+            
             install_log_capture(logging.WARNING)
             
             # Should add handler and set WARNING level
-            mock_root_logger.addHandler.assert_called_once()
-            added_handler = mock_root_logger.addHandler.call_args[0][0]
-            added_handler.setLevel.assert_called_once_with(logging.WARNING)
+            mock_root_logger.addHandler.assert_called_once_with(mock_capture)
+            mock_capture.setLevel.assert_called_once_with(logging.WARNING)
             
             # Should lower root logger level to WARNING
             mock_root_logger.setLevel.assert_called_once_with(logging.WARNING)
@@ -173,7 +178,7 @@ class TestEndToEndLogLevelFiltering:
         # Run pytest with WARNING log level
         xml_file = test_project / "results.xml"
         result = subprocess.run([
-            "python", "-m", "pytest",
+            sys.executable, "-m", "pytest",
             str(test_project),
             f"--junit-xml={xml_file}",
             "--junit-log-level=WARNING",
@@ -222,7 +227,7 @@ class TestEndToEndLogLevelFiltering:
         
         xml_file = test_project / "results.xml"
         result = subprocess.run([
-            "python", "-m", "pytest",
+            sys.executable, "-m", "pytest",
             str(test_project), 
             f"--junit-xml={xml_file}",
             "--junit-log-level=ERROR",
@@ -268,7 +273,7 @@ class TestEndToEndLogLevelFiltering:
         
         xml_file = test_project / "results.xml"
         result = subprocess.run([
-            "python", "-m", "pytest",
+            sys.executable, "-m", "pytest",
             str(test_project),
             f"--junit-xml={xml_file}",
             "--junit-log-level=DEBUG",
@@ -313,7 +318,7 @@ class TestEndToEndLogLevelFiltering:
         
         xml_file = test_project / "results.xml"
         result = subprocess.run([
-            "python", "-m", "pytest",
+            sys.executable, "-m", "pytest",
             str(test_project),
             f"--junit-xml={xml_file}",
             "--junit-log-level=ERROR",  # Should filter out DEBUG but keep ASSERT

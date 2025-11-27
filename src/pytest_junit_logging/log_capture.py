@@ -45,6 +45,10 @@ class TestLogCapture(logging.Handler):
     
     def emit(self, record: logging.LogRecord) -> None:
         """Capture a log record and store it with metadata."""
+        # Check if record meets the handler's level requirement
+        if record.levelno < self.level:
+            return
+            
         try:
             # Format timestamp in ISO format with timezone
             timestamp = datetime.fromtimestamp(record.created, tz=timezone.utc).isoformat()
