@@ -5,7 +5,6 @@
 [![Integration Tests](https://github.com/Mewongu/pytest-junit-logging/workflows/Integration%20Tests/badge.svg)](https://github.com/Mewongu/pytest-junit-logging/actions/workflows/integration.yml)
 [![PyPI version](https://badge.fury.io/py/pytest-junit-logging.svg)](https://badge.fury.io/py/pytest-junit-logging)
 [![Python versions](https://img.shields.io/pypi/pyversions/pytest-junit-logging.svg)](https://pypi.org/project/pytest-junit-logging/)
-[![codecov](https://codecov.io/gh/Mewongu/pytest-junit-logging/branch/main/graph/badge.svg)](https://codecov.io/gh/Mewongu/pytest-junit-logging)
 
 A pytest plugin that captures log output during test execution and embeds it into JUnit XML reports.
 
@@ -247,7 +246,7 @@ The project uses GitHub Actions for comprehensive CI/CD:
 - **Code Quality**: Automated linting (ruff), formatting (black), and type checking (mypy)  
 - **Integration Tests**: End-to-end testing with real pytest runs and XML validation
 - **Security Scanning**: Automated security scans with bandit
-- **Coverage Reporting**: Code coverage tracking with codecov
+- **Coverage Reporting**: Code coverage tracking and reporting
 
 All checks must pass before code can be merged to main.
 
