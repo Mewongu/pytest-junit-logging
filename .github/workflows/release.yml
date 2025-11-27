@@ -78,6 +78,8 @@ jobs:
             pytest-version: "8"
           - python-version: "3.13"
             pytest-version: "8"
+          - python-version: "3.14"
+            pytest-version: "8"
 
     steps:
     - uses: actions/checkout@v4

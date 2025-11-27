@@ -33,6 +33,9 @@ jobs:
           # Python 3.13 with pytest 8.x only
           - python-version: "3.13"
             pytest-version: "8"
+          # Python 3.14 with pytest 8.x only
+          - python-version: "3.14"
+            pytest-version: "8"
 
     steps:
     - uses: actions/checkout@v4
