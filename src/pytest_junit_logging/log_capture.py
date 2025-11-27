@@ -28,12 +28,18 @@ class TestLogCapture(logging.Handler):
         super().__init__()
         self.logs: List[LogEntry] = []
         self.current_test_item: Optional[str] = None
+        self.current_fixture_context: Optional[Dict[str, Any]] = None
         self._lock = threading.Lock()
     
     def set_current_test_item(self, test_item_id: Optional[str]) -> None:
         """Set the current test item context for log association."""
         with self._lock:
             self.current_test_item = test_item_id
+    
+    def set_fixture_context(self, fixture_context: Optional[Dict[str, Any]]) -> None:
+        """Set the current fixture context for log association."""
+        with self._lock:
+            self.current_fixture_context = fixture_context
     
     def emit(self, record: logging.LogRecord) -> None:
         """Capture a log record and store it with metadata."""
@@ -116,6 +122,7 @@ class TestItemTracker:
     
     def __init__(self):
         self.current_test_item: Optional[str] = None
+        self.current_fixture_context: Optional[Dict[str, Any]] = None
         self.session_logs: List[LogEntry] = []
         self.module_logs: Dict[str, List[LogEntry]] = {}
         self.test_logs: Dict[str, List[LogEntry]] = {}
@@ -147,6 +154,22 @@ class TestItemTracker:
         
         # Update log capture handler
         get_log_capture().set_current_test_item(self.current_test_item)
+    
+    def set_fixture_context(self, fixturedef, request, phase: str) -> None:
+        """Set the current fixture context for log capture."""
+        with self._lock:
+            if fixturedef and request:
+                self.current_fixture_context = {
+                    "name": fixturedef.argname,
+                    "scope": fixturedef.scope,
+                    "phase": phase,  # "setup" or "teardown"
+                    "request": request
+                }
+            else:
+                self.current_fixture_context = None
+        
+        # Update log capture handler with fixture context
+        get_log_capture().set_fixture_context(self.current_fixture_context)
     
     def associate_logs_with_test(self, test_item_id: str) -> List[LogEntry]:
         """Get all logs that should be associated with a test item."""

@@ -83,6 +83,18 @@ def pytest_runtest_makereport(item, call):
                 get_log_capture().logs.append(log_entry)
 
 
+def pytest_fixture_setup(fixturedef, request):
+    """Called before each fixture is executed."""
+    tracker = get_test_tracker()
+    tracker.set_fixture_context(fixturedef, request, "setup")
+
+
+def pytest_fixture_post_finalizer(fixturedef, request):
+    """Called after each fixture finalizer is executed."""
+    tracker = get_test_tracker()
+    tracker.set_fixture_context(fixturedef, request, "teardown")
+
+
 def pytest_sessionfinish(session, exitstatus):
     """Called after whole test run finished."""
     # Modify JUnit XML if it was generated
