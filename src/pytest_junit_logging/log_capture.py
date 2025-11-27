@@ -19,6 +19,8 @@ class LogEntry:
     filename: str
     lineno: int
     test_item_id: Optional[str] = None
+    fixture_scope: Optional[str] = None
+    fixture_phase: Optional[str] = None
 
 
 class TestLogCapture(logging.Handler):
@@ -54,6 +56,9 @@ class TestLogCapture(logging.Handler):
             # Get the formatted message
             message = self.format(record)
             
+            # Determine the appropriate test item ID based on context
+            test_item_id = self._determine_test_context()
+            
             # Create log entry
             log_entry = LogEntry(
                 timestamp=timestamp,
@@ -61,15 +66,36 @@ class TestLogCapture(logging.Handler):
                 message=message,
                 filename=filename,
                 lineno=lineno,
-                test_item_id=self.current_test_item
+                test_item_id=test_item_id
             )
             
             with self._lock:
                 self.logs.append(log_entry)
                 
+            # If we're in a fixture context, also add to scope-specific collections
+            if self.current_fixture_context:
+                self._add_to_fixture_scope(log_entry)
+                
         except Exception:
             # Don't let logging errors break the test
             pass
+    
+    def _determine_test_context(self) -> Optional[str]:
+        """Determine the appropriate test context for a log entry."""
+        if self.current_fixture_context:
+            # During fixture execution, use the current test item if available
+            return self.current_test_item
+        else:
+            # During test execution, use the current test item
+            return self.current_test_item
+    
+    def _add_to_fixture_scope(self, log_entry: LogEntry) -> None:
+        """Add log entry to the appropriate fixture scope collection."""
+        # Store fixture context info in the log entry for later processing
+        # We'll handle the scope distribution in the tracker
+        if self.current_fixture_context:
+            log_entry.fixture_scope = self.current_fixture_context["scope"]
+            log_entry.fixture_phase = self.current_fixture_context["phase"]
     
     def get_logs_for_test(self, test_item_id: str) -> List[LogEntry]:
         """Get all logs associated with a specific test item."""
@@ -174,26 +200,46 @@ class TestItemTracker:
     def associate_logs_with_test(self, test_item_id: str) -> List[LogEntry]:
         """Get all logs that should be associated with a test item."""
         with self._lock:
-            # Start with session logs (appear in all tests)
-            all_logs = self.session_logs.copy()
+            all_logs = []
             
-            # Add module logs if this test is in that module
-            for module_id, logs in self.module_logs.items():
-                if test_item_id.startswith(module_id):
-                    all_logs.extend(logs)
+            # Get all logs from the capture handler
+            capture = get_log_capture()
+            all_captured_logs = capture.logs.copy()
             
-            # Add test-specific logs
-            if test_item_id in self.test_logs:
-                all_logs.extend(self.test_logs[test_item_id])
-            
-            # Add logs from the capture handler for this test
-            capture_logs = get_log_capture().get_logs_for_test(test_item_id)
-            all_logs.extend(capture_logs)
+            # Process logs and distribute by scope
+            for log in all_captured_logs:
+                should_include = False
+                
+                if log.fixture_scope == "session":
+                    # Session fixture logs appear in all tests
+                    should_include = True
+                elif log.fixture_scope == "module":
+                    # Module fixture logs appear in tests from the same module
+                    log_module = self._get_module_from_test_id(log.test_item_id or "")
+                    test_module = self._get_module_from_test_id(test_item_id)
+                    should_include = (log_module == test_module)
+                elif log.fixture_scope == "function":
+                    # Function fixture logs appear only in the specific test
+                    should_include = (log.test_item_id == test_item_id)
+                elif log.test_item_id == test_item_id:
+                    # Regular test logs (not from fixtures)
+                    should_include = True
+                
+                if should_include:
+                    all_logs.append(log)
             
             # Sort by timestamp to maintain chronological order
             all_logs.sort(key=lambda log: log.timestamp)
             
             return all_logs
+    
+    def _get_module_from_test_id(self, test_id: str) -> str:
+        """Extract module name from test item ID."""
+        # test_id format: "tests_example.test_module_a.TestClassA.test_a"
+        parts = test_id.split(".")
+        if len(parts) >= 2:
+            return ".".join(parts[:2])  # "tests_example.test_module_a"
+        return test_id
 
 
 # Global test item tracker
