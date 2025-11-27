@@ -47,12 +47,7 @@ def get_testcase_id_from_element(testcase_element: ET.Element) -> str:
     classname = testcase_element.get("classname", "")
     name = testcase_element.get("name", "")
     
-    # Convert pytest classname format to our internal format
-    # Example: "tests.test_module_a.TestClassA" -> "tests_example.test_module_a.TestClassA"
-    if classname.startswith("tests."):
-        classname = classname.replace("tests.", "tests_example.", 1)
-    
-    # Combine classname and name
+    # Combine classname and name - the XML already has the correct format
     if classname:
         return f"{classname}.{name}"
     else:

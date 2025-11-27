@@ -105,10 +105,13 @@ def modify_junit_xml(xml_path: str) -> None:
         tree = ET.parse(xml_path)
         root = tree.getroot()
         
-        # Find all testcase elements
+        # Find all testcase elements and add logs
         for testcase in root.iter("testcase"):
             test_id = get_testcase_id_from_element(testcase)
             add_logs_to_testcase(testcase, test_id)
+        
+        # Pretty format the XML
+        indent_xml(root)
         
         # Write back the modified XML
         tree.write(xml_path, encoding="utf-8", xml_declaration=True)
@@ -116,4 +119,20 @@ def modify_junit_xml(xml_path: str) -> None:
     except Exception as e:
         # Don't let XML modification errors break the test run
         print(f"Warning: Failed to modify JUnit XML: {e}")
-        pass
+
+
+def indent_xml(elem, level=0):
+    """Add pretty-printing indentation to XML elements."""
+    i = "\n" + level * "    "
+    if len(elem):
+        if not elem.text or not elem.text.strip():
+            elem.text = i + "    "
+        if not elem.tail or not elem.tail.strip():
+            elem.tail = i
+        for child in elem:
+            indent_xml(child, level + 1)
+        if not elem.tail or not elem.tail.strip():
+            elem.tail = i
+    else:
+        if level and (not elem.tail or not elem.tail.strip()):
+            elem.tail = i

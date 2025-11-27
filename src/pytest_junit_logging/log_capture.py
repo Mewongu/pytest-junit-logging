@@ -97,6 +97,9 @@ def install_log_capture() -> None:
     if capture not in root_logger.handlers:
         root_logger.addHandler(capture)
         capture.setLevel(logging.DEBUG)
+        # Ensure root logger level allows our logs through
+        if root_logger.level > logging.DEBUG:
+            root_logger.setLevel(logging.DEBUG)
 
 
 def uninstall_log_capture() -> None:
@@ -120,8 +123,15 @@ class TestItemTracker:
     
     def get_test_item_id(self, item) -> str:
         """Generate a unique ID for a test item."""
-        # Handle parametrized tests properly
-        return f"{item.module.__name__}.{item.cls.__name__ if item.cls else ''}.{item.name}".strip('.')
+        # Match the format used by pytest's JUnit XML plugin
+        # Use the full nodeid to get the package path
+        parts = item.nodeid.split("::")
+        module_path = parts[0].replace("/", ".").replace(".py", "")
+        
+        if item.cls:
+            return f"{module_path}.{item.cls.__name__}.{item.name}"
+        else:
+            return f"{module_path}.{item.name}"
     
     def get_module_id(self, item) -> str:
         """Get the module ID for a test item."""
