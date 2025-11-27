@@ -63,8 +63,13 @@ def pytest_runtest_setup(item):
 
 def pytest_runtest_call(item):
     """Called during test execution."""
-    # Test item context already set in setup
-    pass
+    try:
+        # Temporarily clear fixture context for test execution phase
+        # This will be restored when fixture teardown runs
+        get_log_capture().set_fixture_context(None)
+    except Exception:
+        # Don't let plugin errors break test execution
+        pass
 
 
 def pytest_runtest_teardown(item, nextitem):

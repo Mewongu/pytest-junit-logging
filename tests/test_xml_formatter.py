@@ -28,6 +28,7 @@ class TestLogEntryXMLFormatting:
             xml_element = format_log_entry_for_xml(sample_log_entry)
             
             assert xml_element.tag == "log"
+            assert xml_element.get("step") == "test"
             assert xml_element.get("ts") == "2025-11-27T10:00:00.000000+00:00"
             assert xml_element.get("level") == "INFO"
             assert xml_element.get("src") == "tests/test_example.py:42"
@@ -69,6 +70,51 @@ class TestLogEntryXMLFormatting:
             xml_element = format_log_entry_for_xml(log_entry)
             
             assert xml_element.get("src") == "tests with spaces/test-file.py:10"
+    
+    def test_step_attribute_variations(self):
+        """Test that step attribute is set correctly based on fixture phase."""
+        # Test setup phase
+        setup_log = LogEntry(
+            timestamp="2025-11-27T10:00:00.000000+00:00",
+            level="INFO",
+            message="Setup message",
+            filename="/workspace/test.py",
+            lineno=10,
+            test_item_id="test.example.test_method",
+            fixture_phase="setup"
+        )
+        
+        # Test teardown phase 
+        teardown_log = LogEntry(
+            timestamp="2025-11-27T10:00:01.000000+00:00",
+            level="INFO",
+            message="Teardown message",
+            filename="/workspace/test.py",
+            lineno=20,
+            test_item_id="test.example.test_method",
+            fixture_phase="teardown"
+        )
+        
+        # Test execution phase (no fixture_phase)
+        test_log = LogEntry(
+            timestamp="2025-11-27T10:00:00.500000+00:00",
+            level="DEBUG",
+            message="Test execution message",
+            filename="/workspace/test.py",
+            lineno=15,
+            test_item_id="test.example.test_method"
+        )
+        
+        with patch('pytest_junit_logging.xml_formatter._get_relative_path') as mock_rel_path:
+            mock_rel_path.return_value = "test.py"
+            
+            setup_xml = format_log_entry_for_xml(setup_log)
+            teardown_xml = format_log_entry_for_xml(teardown_log)
+            test_xml = format_log_entry_for_xml(test_log)
+            
+            assert setup_xml.get("step") == "setup"
+            assert teardown_xml.get("step") == "teardown"
+            assert test_xml.get("step") == "test"
 
 
 class TestRelativePathGeneration:

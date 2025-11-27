@@ -6,6 +6,7 @@ A pytest plugin that captures log output during test execution and embeds it int
 
 - 📋 **Log Integration**: Automatically captures all log output during test execution and embeds it into JUnit XML reports
 - 🎯 **Smart Scope Distribution**: Session-scoped logs appear in all tests, module-scoped logs appear in module tests, function-scoped logs appear only in specific tests
+- ⚡ **Execution Phase Tags**: Each log entry includes a `step` attribute indicating whether it occurred during setup or test execution
 - 🔧 **Configurable Log Levels**: Control verbosity with `--junit-log-level` option
 - 🚨 **Assertion Capture**: Automatically captures assertion failure messages as ASSERT-level logs
 - 📁 **Relative Paths**: File paths in logs are relative to project root for portability
@@ -87,16 +88,16 @@ The resulting `results.xml` will include embedded logs:
     <testsuite name="pytest" errors="0" failures="0" skipped="0" tests="2" time="0.01">
         <testcase classname="test_example" name="test_user_creation" time="0.001">
             <logs>
-                <log ts="2025-11-27T10:00:00.000000+00:00" level="INFO" src="test_example.py:8">Setting up database connection</log>
-                <log ts="2025-11-27T10:00:00.100000+00:00" level="INFO" src="test_example.py:15">Starting user creation test</log>
-                <log ts="2025-11-27T10:00:00.200000+00:00" level="INFO" src="test_example.py:22">User creation test completed successfully</log>
+                <log step="setup" ts="2025-11-27T10:00:00.000000+00:00" level="INFO" src="test_example.py:8">Setting up database connection</log>
+                <log step="test" ts="2025-11-27T10:00:00.100000+00:00" level="INFO" src="test_example.py:15">Starting user creation test</log>
+                <log step="test" ts="2025-11-27T10:00:00.200000+00:00" level="INFO" src="test_example.py:22">User creation test completed successfully</log>
             </logs>
         </testcase>
         <testcase classname="test_example" name="test_user_validation" time="0.001">
             <logs>
-                <log ts="2025-11-27T10:00:01.000000+00:00" level="INFO" src="test_example.py:8">Setting up database connection</log>
-                <log ts="2025-11-27T10:00:01.100000+00:00" level="WARNING" src="test_example.py:25">This is a validation test</log>
-                <log ts="2025-11-27T10:00:01.200000+00:00" level="INFO" src="test_example.py:10">Closing database connection</log>
+                <log step="setup" ts="2025-11-27T10:00:01.000000+00:00" level="INFO" src="test_example.py:8">Setting up database connection</log>
+                <log step="test" ts="2025-11-27T10:00:01.100000+00:00" level="WARNING" src="test_example.py:25">This is a validation test</log>
+                <log step="test" ts="2025-11-27T10:00:01.200000+00:00" level="INFO" src="test_example.py:10">Closing database connection</log>
             </logs>
         </testcase>
     </testsuite>
@@ -111,6 +112,27 @@ The plugin intelligently distributes logs based on fixture scopes:
 - **Module-scoped fixture logs**: Appear in all tests within the same module
 - **Function-scoped fixture logs**: Appear only in the specific test that uses the fixture
 - **Test execution logs**: Appear only in their respective test case
+
+## Execution Phase Tags
+
+Each log entry includes a `step` attribute that indicates during which execution phase the log was generated:
+
+- **`step="setup"`**: Logs from fixture setup (session, module, function fixture initialization)
+- **`step="test"`**: Logs from test execution and fixture teardown
+
+This makes it easy to distinguish between infrastructure logs (fixture setup) and actual test logic:
+
+```xml
+<logs>
+    <log step="setup" ts="..." level="INFO" src="conftest.py:10">Database connection established</log>
+    <log step="setup" ts="..." level="INFO" src="conftest.py:25">User fixtures initialized</log>
+    <log step="test" ts="..." level="DEBUG" src="test_user.py:15">Starting user validation test</log>
+    <log step="test" ts="..." level="INFO" src="test_user.py:20">User validation completed</log>
+    <log step="test" ts="..." level="INFO" src="conftest.py:30">Cleaning up user fixtures</log>
+</logs>
+```
+
+**Post-processing**: To flatten the structure and remove step attributes for legacy compatibility, simply strip the `step="..."` attributes from log elements.
 
 ## Log Level Filtering
 

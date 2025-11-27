@@ -13,6 +13,15 @@ def format_log_entry_for_xml(log_entry: LogEntry) -> ET.Element:
     """Format a log entry as an XML element."""
     log_element = ET.Element("log")
     
+    # Set step attribute based on fixture phase
+    if log_entry.fixture_phase == "setup":
+        step = "setup"
+    elif log_entry.fixture_phase == "teardown":
+        step = "teardown"
+    else:
+        step = "test"
+    log_element.set("step", step)
+    
     # Set attributes
     log_element.set("ts", log_entry.timestamp)
     log_element.set("level", log_entry.level)
